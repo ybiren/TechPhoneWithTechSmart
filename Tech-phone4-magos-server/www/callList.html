@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+  
+        var g_SelCallCode = "";     
+	    var g_SelCustName = "";
+		var g_SelCallStatus = "";
+		
+		MAX_NUM_HISTORY_CALLS = 15;
+		/********************************************************************************************************/
+		    var g_callTemplate = "<TABLE  callCode='[[code]]' custName='[[custName]]' callStatus='[[callStatus]]' callUserCode='[[callUserCode]]' onclick='CallOnClick(this);' dir='rtl' class='[[className]]' style='margin: 0 auto'>" + 
+		                 "  <TR>" + 
+		                 "    <TD ><span class='callListCellData'>[[code]]</span>&nbsp;&nbsp;&nbsp;<span class='callListCellHeader'>סטאטוס:</span><span class='callListCellData' style='[[colorForEndedCall]]' >[[callStatusStr]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>" + 
+		                 "    <TD ><span class='callListCellData'>[[date]],&nbsp;</span><span class='callListCellData'>[[hour]],&nbsp;</span><span class='callListCellData'>[[typeStr]]</span>,&nbsp;</span><span class='callListCellData'>[[inService]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>" + 
+		                 "    <TD colspan=2><span class='callListCellData'>טכנאי:&nbsp;</span><span class='callListCellData'>[[callUserCode]]</span>&nbsp;&nbsp;&nbsp;<span class='callListCellData'>ק. המשך:&nbsp;</span><span class='callListCellData'>[[isContinue]]</span></TD>" + 
+		                 "  </TR>" + 
+						 "  <TR>" + 
+		                 "    <TD ><span class='callListCellHeader'>לקוח:&nbsp;</span><span class='callListCellData'>[[custName]]</span></TD>" + 
+		                 "  </TR>" +
+		                 "  <TR>" + 
+		                 "    <TD ><span class='callListCellHeader'>אתר:&nbsp;</span><span class='callListCellData'>[[siteName]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>" + 
+		                 "    <TD ><span class='callListCellHeader'>פרויקט:&nbsp;</span><span class='callListCellData'>[[projName]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>"  + 
+		                 "    <TD ><span class='callListCellHeader'>כתובת:&nbsp;</span><span class='callListCellData'>[[address]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>"  + 
+		                 "    <TD ><span class='callListCellHeader'>מיקום:&nbsp;</span><span class='callListCellData'>[[location]]</span></TD>" + 
+		                 "  </TR>" +
+						 "  <TR>"  + 
+		                 "    <TD ><span class='callListCellHeader'>המזמין:&nbsp;</span><span class='callListCellData'>[[recieverServiceName]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "  <TR>" + 
+		                 "    <TD ><span class='callListCellHeader'>תיאור:&nbsp;</span><span class='callListCellData'>[[callDesc]]</span></TD>" + 
+		                 "  </TR>" + 
+		                 "<TR>" +
+						 "<TD ><IMG src='img/spacer.gif' height=1 width=310></TD>" +
+						 "</TR>" +
+						"</TABLE><BR><BR>";
+
+		/********************************************************************************************************/
+        function CallOnClick(that) {
+            			
+            var tblArr = document.getElementsByTagName("TABLE");
+            for (i = 0; i < tblArr.length; i++) {
+                //alert(tblArr[className]);
+                tblArr[i].className = tblArr[i].className.replace("Signed", "");
+            }
+            that.className = that.className + "Signed";
+			var prevSelCallCode = g_SelCallCode;
+			g_SelCallCode =  that.getAttribute('callCode');
+		    g_SelCustName =  that.getAttribute('custName');
+		    g_SelCallStatus =  that.getAttribute('callStatus');
+			
+			window.localStorage.setItem("SelCallCode",g_SelCallCode); 
+			window.localStorage.setItem("SelCallStatus",g_SelCallStatus); 
+			window.localStorage.setItem("callUserCode",that.getAttribute('callUserCode'));
+				
+		   if(that.getAttribute('callStatus')== CALL_FREEZED){
+		     document.getElementById("btnActions").className = "whiteOnGray";
+			 document.getElementById("btnActions").disabled = true;
+		   }
+			else{
+			  document.getElementById("btnActions").className = "redYellowButton";
+			  document.getElementById("btnActions").disabled = false;
+		   }
+		   document.getElementById("btnSync").outerHTML = document.getElementById("btnSync").outerHTML.replace(prevSelCallCode,g_SelCallCode);
+		   document.getElementById("btnSync").style.visibility ="visible";
+		   if(g_SelCallStatus == CALL_ENDED)
+		     document.getElementById("btnSync").style.visibility ="hidden";  
+		}
+     
+
+       /********************************************************************************************************/
+       function GetCalls() {
+	   		   
+		   if(window.localStorage.getItem("includeHistory")=="1")
+		     document.getElementById("chkIncludeHistory").checked = true;
+		   else
+		     document.getElementById("chkIncludeHistory").checked = false;
+		   
+		   document.getElementById("tdMaxNumHistNumCalls").style.visibility =  (document.getElementById("chkIncludeHistory").checked) ? "visible" : "hidden"; 
+		   
+		   
+		   var qryStr = "op=getAllCalls";
+		   
+		   
+		   var userCode="tech";
+		   if(typeof(window.localStorage)!="undefined" && window.localStorage.getItem("UserName")!=null)
+             userCode = window.localStorage.getItem("UserName");
+		   
+		   if(typeof(GetUrlVars()["getHistCallsBySite"])=="undefined" && typeof(GetUrlVars()["getHistCallsByDate"])=="undefined" && typeof(GetUrlVars()["getHistCallsByCallCode"])=="undefined" && typeof(GetUrlVars()["getHistCallsByAll"])=="undefined")
+		     qryStr+="&userCode=" + userCode; 
+  		   
+		   
+		   if(typeof(GetUrlVars()["includeHistory"])!="undefined" || window.localStorage.getItem("includeHistory")=="1"){
+		     qryStr+= "&includeHistory=1";
+		     document.getElementById("chkIncludeHistory").checked = true;
+		   }
+	 	
+		   window.localStorage.removeItem("getHistCalls");
+		   if(typeof(GetUrlVars()["getHistCallsBySite"])!="undefined"){	
+		     qryStr+= "&includeHistory=1&siteName=" + GetUrlVars()["getHistCallsBySite"] + "&histByUser=" + GetUrlVars()["histByUser"];	
+	         document.getElementById("trIncludeHist").style.visibility = "hidden";	     
+			 window.localStorage.setItem("getHistCalls","getHistCallsBySite=" + GetUrlVars()["getHistCallsBySite"] + "&histByUser=" + GetUrlVars()["histByUser"]);
+		   }	
+           
+		   if(typeof(GetUrlVars()["getHistCallsByDate"])!="undefined"){	
+		     qryStr+= "&includeHistory=1&callDateTime=" + GetUrlVars()["getHistCallsByDate"] + "&histByUser=" + GetUrlVars()["histByUser"];	
+		     document.getElementById("trIncludeHist").style.visibility = "hidden";
+			 window.localStorage.setItem("getHistCalls","getHistCallsByDate=" + GetUrlVars()["getHistCallsByDate"]  + "&histByUser=" + GetUrlVars()["histByUser"]);
+		   }
+		   	
+		   if(typeof(GetUrlVars()["getHistCallsByCallCode"])!="undefined"){	
+		     qryStr+= "&includeHistory=1&callCode=" + GetUrlVars()["getHistCallsByCallCode"] + "&histByUser=" + GetUrlVars()["histByUser"];	
+		     document.getElementById("trIncludeHist").style.visibility = "hidden";
+			 window.localStorage.setItem("getHistCalls","getHistCallsByCallCode=" + GetUrlVars()["getHistCallsByCallCode"] + "&histByUser=" + GetUrlVars()["histByUser"]);
+		   }	
+					
+            if(typeof(GetUrlVars()["getHistCallsByAll"])!="undefined"){			
+			  qryStr+= "&includeHistory=1&all=1" + "&histByUser=" + GetUrlVars()["histByUser"];
+			  document.getElementById("trIncludeHist").style.visibility = "hidden";
+			  window.localStorage.setItem("getHistCalls","getHistCallsByAll=" + GetUrlVars()["getHistCallsByAll"] + "&histByUser=" + GetUrlVars()["histByUser"]);
+			}	   
+				   
+		   document.getElementById("btnActions").className = "whiteOnGray";
+		   document.getElementById("btnActions").disabled = true;
+		  
+           if((typeof(GetUrlVars()["mainMenuReferer"])!="undefined" && GetUrlVars()["mainMenuReferer"]=="1" && typeof(GetUrlVars()["online"])!="undefined" && GetUrlVars()["online"]=="V") || (typeof(GetUrlVars()["reloadAfterEndMission"])!="undefined" && GetUrlVars()["reloadAfterEndMission"]=="1"))
+		     window.localStorage.removeItem(qryStr);
+		   
+		   ShowRelaxUser('relaxUserDlg',window.localStorage.getItem(qryStr)==null);
+		   setTimeout(function(){			
+
+             UpdateHeader();
+		 	 json = GetData(qryStr);
+		     console.log("json",json);
+			 var allCallsTemplate = "";
+            
+			selCallCode = GetUrlVars()["callCode"];
+		    if(typeof(window.localStorage)!="undefined" && window.localStorage.getItem("SelCallCode")!=null){
+		      selCallCode =  window.localStorage.getItem("SelCallCode");
+		    } 
+		     			 
+		    var numCalls = 0;
+		    var selCallInd = 0;
+			
+			var toContinue = true;
+			for (i = 0; i < json.length && toContinue; i++) {
+             if (json[i] && typeof (json[i].code) != "undefined") {
+               numCalls++
+			   if(document.getElementById("trIncludeHist").style.visibility != "hidden" && document.getElementById("chkIncludeHistory").checked && numCalls==MAX_NUM_HISTORY_CALLS)
+			     toContinue = false;  
+			   var callTemplate = g_callTemplate;
+               if( (i==0 && typeof(selCallCode)=="undefined") || (typeof(selCallCode)!="undefined" && json[i].code==selCallCode) ){
+                 callTemplate = callTemplate.replace("[[className]]", "call1BGSigned");
+                 g_SelCallCode = json[i].code;
+				 g_SelCustName = json[i].custName;
+				 g_SelCallStatus = json[i].callStatus;
+				 
+				 window.localStorage.setItem("SelCallCode",g_SelCallCode); 
+				 window.localStorage.setItem("SelCallStatus",g_SelCallStatus); 
+				 window.localStorage.setItem("callUserCode",json[i].userCode);
+				 
+				 
+				 if(json[i].callStatus == CALL_FREEZED){
+					document.getElementById("btnActions").className = "whiteOnGray";
+					document.getElementById("btnActions").disabled = true;
+				 }
+				 else{
+				   document.getElementById("btnActions").className = "redYellowButton";
+			       document.getElementById("btnActions").disabled = false;
+				   document.getElementById("btnSync").style.visibility = "visible";
+				   UpdateHeader(g_SelCallCode);
+			 	 }
+				 selCallInd = i;
+				}
+                if (i % 2 == 0)
+                  callTemplate = callTemplate.replace("[[className]]", "call1BG");
+                else
+                  callTemplate = callTemplate.replaceAll("[[className]]", "call2BG");
+                callTemplate = callTemplate.replaceAll("[[code]]", json[i].code);
+                callTemplate = callTemplate.replaceAll("[[callStatus]]", json[i].callStatus);
+                callTemplate = callTemplate.replaceAll("[[callStatusStr]]", GetCallStatusStr(json[i].callStatus));
+                if(json[i].callStatus==CALL_ENDED)
+				  callTemplate = callTemplate.replaceAll("[[colorForEndedCall]]","color:yellow;");
+				else  
+				  callTemplate = callTemplate.replaceAll("[[colorForEndedCall]]","");
+				
+				callTemplate = callTemplate.replaceAll("[[typeStr]]", GetCallTypeStr(json[0].callType));
+				callTemplate = callTemplate.replaceAll("[[isContinue]]", (json[i].isContinue == "0" ? "לא" : "כן"));
+				callTemplate = callTemplate.replaceAll("[[inService]]", (json[i].inService == "0" ? "לפי קריאה" : "בשירות"));
+				callTemplate = callTemplate.replaceAll("[[custName]]", json[i].custName);
+                callTemplate = callTemplate.replaceAll("[[siteName]]", json[i].siteName);
+                callTemplate = callTemplate.replaceAll("[[projName]]", json[i].projName);
+                callTemplate = callTemplate.replaceAll("[[address]]", json[i].address);
+                callTemplate = callTemplate.replaceAll("[[location]]", json[i].location);
+                callTemplate = callTemplate.replaceAll("[[recieverServiceName]]", json[i].recieverServiceName);
+                callTemplate = callTemplate.replaceAll("[[callDesc]]", json[i].callDesc);
+                callTemplate = callTemplate.replaceAll("[[callUserCode]]", json[i].userCode);
+                callTemplate = callTemplate.replaceAll("[[date]]", TimeConverter(json[i].callDateTime, false));
+                callTemplate = callTemplate.replaceAll("[[hour]]", TimeConverter(json[i].callDateTime, true));
+                allCallsTemplate += callTemplate; 
+              }
+            }
+            document.getElementById("callsDIV").innerHTML = allCallsTemplate;
+			document.getElementById("callsDIV").scrollTop = selCallInd*(document.getElementById("callsDIV").scrollHeight / numCalls) ;
+		  },200);		
+			
+		 }
+
+		 /********************************************************************************************************/
+       	 function UpdateAndExit(){
+		 }
+		 
+		 /********************************************************************************************************/
+       	 function Reload(includeHistory){
+		   
+		   if(includeHistory)
+		     window.localStorage.setItem("includeHistory","1");
+		   else
+		     window.localStorage.setItem("includeHistory","0");
+		   
+		   var  loc = "callList.html";
+		   if(includeHistory)
+		     loc+= "?includeHistory=1";
+		   window.location = loc; 
+		 }
+        
+        function ExitToMenu(){		
+		  if(window.localStorage.getItem("callHistory")!=null)
+		    window.location='callHistory.html';
+		  else
+		    window.location='mainMenu.html';
+		}
+		</script>
+    
+    
+    </head>
+    <body onload="GetCalls();">
+        <!--
+		<div class="app">
+            <h1>Apache Cordova</h1>
+            <div id="deviceready" class="blink">
+                <p class="event listening">Connecting to Device</p>
+                <p class="event received">Device is Ready</p>
+            </div>
+        </div>
+        -->
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=3><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD><script language="javascript">CreateHeader(true);document.getElementById("btnSync").style.visibility = "hidden";</script></TD></TR>
+		<TR><TD colspan=3 class="largeBlack" >קריאות שירות</TD></TR>
+		</TABLE>
+		<TABLE style="margin: 0 auto">
+		  <TR>
+		    <TD align="left"><BUTTON onclick="ExitToMenu();" class="redYellowButton">יציאה</BUTTON></TD>
+			<TD align="left"><BUTTON id="btnActions" onclick="window.location='callActions.html?callCode=' + g_SelCallCode + '&custName=' + g_SelCustName + '&callStatus=' + g_SelCallStatus" class="redYellowButton">פעולות</BUTTON></TD>
+		    <TD align="left"><BUTTON onclick="window.location='callDtls.html?callCode=' + g_SelCallCode" class="redYellowButton">פרטי הקריאה</BUTTON></TD>
+		  </TR>
+		  <TR id="trIncludeHist"><TD colspan=2 class="mediumBlack" id="tdMaxNumHistNumCalls" ><table><tr><td>(קריאות אחרונות</td><td>15)</td></tr></table></TD><TD align="right" colspan=1 class="largeBlack">הסטוריית קריאות<INPUT id="chkIncludeHistory" type="checkbox" onclick="Reload(this.checked);"></TD></TR>
+		</TABLE>
+	   	</DIV>
+		<div id="callsDIV" style="position:absolute;top:35%;width:100%;height:65%;overflow-y:auto;">
+		
+		 
+		<!--
+        <TABLE dir="rtl" class="call1BG" style="margin: 0 auto">
+		<TR>
+		  <TD><span class="callListCellHeader">קריאה:</span><span class="callListCellData">15491668</span></TD>
+		  <TD><span class="callListCellHeader">סטאטוס:</span><span class="callListCellData">ממתינה לביצוע</span></TD>
+		  
+		</TR>
+		<TR>
+		    <TD><span class="callListCellHeader">מתאריך:</span><span class="callListCellData">30/06/2015</span></TD>
+		    <TD><span class="callListCellHeader">שעה:</span><span class="callListCellData">11:15</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">לקוח:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">אתר:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">פרויקט:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">כתובת:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">המזמין:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">תיאור:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		</TABLE>
+		&nbsp;
+		<TABLE dir="rtl" class="call2BG" style="margin: 0 auto">
+		<TR>
+		  <TD><span class="callListCellHeader">קריאה:</span><span class="callListCellData">15491668</span></TD>
+		  <TD><span class="callListCellHeader">סטאטוס:</span><span class="callListCellData">ממתינה לביצוע</span></TD>
+		</TR>
+		<TR>
+		    <TD><span class="callListCellHeader">מתאריך:</span><span class="callListCellData">30/06/2015</span></TD>
+		    <TD><span class="callListCellHeader">שעה:</span><span class="callListCellData">12:15</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">לקוח:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">אתר:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">פרויקט:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">כתובת:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">המזמין:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">תיאור:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		</TABLE>
+		&nbsp;
+		<TABLE dir="rtl" class="call1BG" style="margin: 0 auto">
+		<TR>
+		  <TD><span class="callListCellHeader">קריאה:</span><span class="callListCellData">15491668</span></TD>
+		  <TD><span class="callListCellHeader">סטאטוס:</span><span class="callListCellData">ממתינה לביצוע</span></TD>
+		</TR>
+		<TR>
+		    <TD><span class="callListCellHeader">מתאריך:</span><span class="callListCellData">30/05/2015</span></TD>
+		    <TD><span class="callListCellHeader">שעה:</span><span class="callListCellData">10:15</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">לקוח:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">אתר:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">פרויקט:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">כתובת:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">המזמין:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">תיאור:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		</TABLE>
+		&nbsp;
+		<TABLE dir="rtl" class="call2BG" style="margin: 0 auto">
+		<TR>
+		  <TD><span class="callListCellHeader">קריאה:</span><span class="callListCellData">15491668</span></TD>
+		  <TD><span class="callListCellHeader">סטאטוס:</span><span class="callListCellData">ממתינה לביצוע</span></TD>
+		</TR>
+		<TR>
+		    <TD><span class="callListCellHeader">מתאריך:</span><span class="callListCellData">30/05/2015</span></TD>
+		    <TD><span class="callListCellHeader">שעה:</span><span class="callListCellData">10:15</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">לקוח:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">אתר:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">פרויקט:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">כתובת:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">המזמין:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		<TR>
+		  <TD colspaמ=2><span class="callListCellHeader">תיאור:</span><span class="callListCellData">גולף א. קו</span></TD>
+		</TR>
+		</TABLE>
+		-->
+        
+        </div>		
+		
+		
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>

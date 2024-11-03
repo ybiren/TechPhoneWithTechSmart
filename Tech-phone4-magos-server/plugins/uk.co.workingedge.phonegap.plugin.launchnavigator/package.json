@@ -1,0 +1,62 @@
+{
+  "_from": "git+https://github.com/dpa99c/phonegap-launch-navigator.git",
+  "_id": "uk.co.workingedge.phonegap.plugin.launchnavigator@4.2.1",
+  "_inBundle": false,
+  "_location": "/uk.co.workingedge.phonegap.plugin.launchnavigator",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "https://github.com/dpa99c/phonegap-launch-navigator",
+    "rawSpec": "https://github.com/dpa99c/phonegap-launch-navigator",
+    "saveSpec": "git+https://github.com/dpa99c/phonegap-launch-navigator.git",
+    "fetchSpec": "https://github.com/dpa99c/phonegap-launch-navigator.git",
+    "gitCommittish": null
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "git+https://github.com/dpa99c/phonegap-launch-navigator.git#c1dd5e7bb8b17abedfe98ef8ee9cea0a5a40d796",
+  "_spec": "https://github.com/dpa99c/phonegap-launch-navigator",
+  "_where": "C:\\yossiapps\\cordovaTry41",
+  "author": {
+    "name": "Dave Alden"
+  },
+  "bugs": {
+    "url": "https://github.com/dpa99c/phonegap-launch-navigator/issues"
+  },
+  "bundleDependencies": false,
+  "cordova": {
+    "id": "uk.co.workingedge.phonegap.plugin.launchnavigator",
+    "platforms": [
+      "android",
+      "ios",
+      "wp8",
+      "windows"
+    ]
+  },
+  "cordova_name": "Launch Navigator",
+  "deprecated": false,
+  "description": "Cordova/Phonegap plugin to navigate to a destination using native navigation apps on Android, iOS, and Windows Phone",
+  "homepage": "https://github.com/dpa99c/phonegap-launch-navigator#readme",
+  "issue": "https://github.com/dpa99c/phonegap-launch-navigator/issues",
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova",
+    "phonegap",
+    "ios",
+    "android",
+    "windows",
+    "wp8",
+    "navigation",
+    "navigator"
+  ],
+  "license": "MIT",
+  "name": "uk.co.workingedge.phonegap.plugin.launchnavigator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpa99c/phonegap-launch-navigator.git"
+  },
+  "types": "./uk.co.workingedge.phonegap.plugin.launchnavigator.d.ts",
+  "version": "4.2.1"
+}

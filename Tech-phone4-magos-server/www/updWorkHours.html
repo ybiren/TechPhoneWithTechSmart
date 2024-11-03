@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+		
+		var g_CallCode = "";
+		/**************************************************************/
+		function UpdateAndExit(targetWin){
+			UpdateHours(targetWin);  
+		}
+
+		/**************************************************************/
+		function body_onload() {
+    		  
+		  
+		  g_CallCode = GetUrlVars()["callCode"];
+          g_referer =  GetUrlVars()["referer"];		
+		
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    UpdateHeader();
+			var json = GetData("op=getCallRep&callCode=" + g_CallCode); 
+  		    
+			if(GetCallFld(g_CallCode,0,"repData","isEnded")=="0")
+		      document.getElementById("rdIsEndedFalse").checked=true;
+		    if(GetCallFld(g_CallCode,0,"repData","isEnded")=="1")
+		      document.getElementById("rdIsEndedTrue").checked=true;
+		   	
+			document.getElementById("dtStartWork").value = document.getElementById("dtEndWork").value = document.getElementById("dtRideHrs").value = TimeConverter(ConvToUnixTimeStamp(new Date()),false,true);
+			
+			if(GetCallFld(g_CallCode,0,"repData","dtStartRide")!=0){
+			  tm = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartRide"),true,true);
+			  document.getElementById("spnStartRide").innerHTML = tm; 
+			  if(GetCallFld(g_CallCode,0,"repData","dtStartWork") !=0){
+			      tm = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartWork") - ConvToSecs(TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartRide"),true,true)),true,true);
+			    hrs = tm.split(":")[0];
+				mnts = tm.split(":")[1];
+				
+				if(("" + hrs).length<2)
+				  hrs =  "0" + hrs;
+ 		        if(("" + mnts).length<2)
+		          mnts =  "0" + mnts;
+
+				document.getElementById("txtRideHrs").value =  hrs + ':' + mnts;
+			    
+				dt = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartRide"),false,true);
+			    document.getElementById("dtStartWork").value = document.getElementById("dtEndWork").value = document.getElementById("dtRideHrs").value = dt;
+			  }	
+			}
+			if(GetCallFld(g_CallCode,0,"repData","dtStartWork") !=0){
+			  tm = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartWork"),true,true);
+			  document.getElementById("spnStartWork").innerHTML = tm;
+			  hrs = tm.split(":")[0];
+		      mnts = tm.split(":")[1];
+			  
+			  if(("" + hrs).length<2)
+			    hrs =  "0" + hrs;
+ 		      if(("" + mnts).length<2)
+		        mnts =  "0" + mnts;
+			  document.getElementById("txtStartWork").value =  hrs + ':' + mnts;
+			
+			  dt = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtStartWork"),false,true);
+			  document.getElementById("dtStartWork").value = document.getElementById("dtEndWork").value = document.getElementById("dtRideHrs").value = dt;
+			}
+			if(GetCallFld(g_CallCode,0,"repData","dtEndWork") !=0){		
+			  tm = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtEndWork"),true,true);
+			  document.getElementById("spnEndWork").innerHTML = tm;
+		      hrs = tm.split(":")[0];
+		      mnts = tm.split(":")[1];
+			  
+			  if(("" + hrs).length<2)
+			    hrs =  "0" + hrs;
+ 		      if(("" + mnts).length<2)
+		        mnts =  "0" + mnts;
+			  document.getElementById("txtEndWork").value =  hrs + ':' + mnts;
+		
+       		  dt = TimeConverter(GetCallFld(g_CallCode,0,"repData","dtEndWork"),false,true);
+			  document.getElementById("dtStartWork").value = document.getElementById("dtEndWork").value = document.getElementById("dtRideHrs").value = dt;
+		
+			}
+		  
+		  },200);
+	   	      
+	   }
+	
+        /**************************************************************/
+		function IsHourValid(that) {
+		
+		  /*
+		  if(that.value=="")
+		    return true;
+		  return that.value.match(/^(((([0-1][0-9])|(2[0-3])):?[0-5][0-9])|(24:?00))/);
+		*/
+		  return true;
+		}
+
+		/**************************************************************/
+		function  ConvToSecs(val) {
+
+		    var fields = val.split(":");
+		    var hr = fields[0];
+		    var mnt = fields[1];
+
+		    return hr * 3600 + mnt * 60;
+		}
+
+		/**************************************************************/
+		function GetTunedDate(that) {
+		
+		  var fields = that.value.split(":");
+		  var hr = fields[0];
+		  var mnt = fields[1];
+		  
+		  var parts =document.getElementById("dtStartWork").value.split('/');
+		  var date = new Date(parts[2],parts[1]-1,parts[0]);
+		  date.setHours(hr);
+		  date.setMinutes(mnt);	
+		  return ConvToUnixTimeStamp(date);
+		}
+		
+		
+		/**************************************************************/
+		function UpdateHours(targetWin){
+		
+		  if(document.getElementById("rdIsEndedFalse").checked==false && document.getElementById("rdIsEndedTrue").checked==false){
+		    alert("יש לסמן האם העבודה הסתיימה");
+		    return;
+		  }
+		 	 
+          	 
+		  if(!IsHourValid(document.getElementById("txtStartWork"))){
+		    alert("שעת התחלה לא תקינה");
+		    return;
+		  }
+		  
+		  
+		  if(!IsHourValid(document.getElementById("txtEndWork"))){
+		    alert("שעת סיום לא תקינה");
+		    return;
+		  }
+		  if(!IsHourValid(document.getElementById("txtRideHrs"))){
+		    alert("שעות נסיעה לא תקינות");
+		    return;
+		  }
+		
+		  var callStatus = 0;
+		  var params = "op=updCallRep&callCode=" + g_CallCode + "&unitCode=0";
+		  if(document.getElementById("txtStartWork").value!=""){
+		    params += '&dtStartWork=' + GetTunedDate(document.getElementById("txtStartWork"));
+		    callStatus = 33;
+		  }  
+		  if(document.getElementById("txtEndWork").value!=""){
+		    params += '&dtEndWork=' + GetTunedDate(document.getElementById("txtEndWork"));
+		    callStatus = 34;
+		  }
+		  
+		  if(document.getElementById("txtStartWork").value!=""  && document.getElementById("txtRideHrs").value!="")
+		    params += '&dtStartRide=' + (GetTunedDate(document.getElementById("txtStartWork")) - ConvToSecs(document.getElementById("txtRideHrs").value));
+		  
+		  isEnded = "0";
+		  if(document.getElementById("rdIsEndedTrue").checked)	
+		    isEnded = "1";
+		  params += "&isEnded=" + isEnded
+		  
+		  if(targetWin) {
+		    g_referer = targetWin;	  
+		  }  
+		  if(!g_referer) {
+		    g_referer = "techSum.html";  // ?callCode= + GetUrlVars()["callCode"] + "&unitCode=0";
+		  }
+		  
+		  if(callStatus!=0){
+			params+="&callStatus=" + callStatus;
+			UpdData(params,false , g_referer + '?callCode=' + g_CallCode  + '&custName=' + document.getElementById('divCustName').innerText);
+		  }	
+		  else
+		    window.location = g_referer + '?callCode=' + g_CallCode  + '&unitCode=0&custName=' + document.getElementById('divCustName').innerText;
+		}
+		
+		/**************************************************************/
+		function OpenDateTimePicker(dtObj,isTimeMode){
+		
+		 
+	      var myDate = new Date(); // From model. 
+ 
+          cordova.plugins.DateTimePicker.show({
+            mode: (isTimeMode) ? "time" : "date",
+            date: myDate,
+            allowOldDates: true,
+            allowFutureDates: true,
+            minuteInterval: 15,
+            locale: "EN",
+            okText: "Select",
+            cancelText: "Cancel",
+            android: {
+              theme: 16974126, // Theme_DeviceDefault_Dialog 
+              calendar: false,
+              is24HourView: true
+           },
+           success: function(newDate) {
+            // Handle new date. 
+            dtObj.value = TimeConverter(ConvToUnixTimeStamp(newDate),isTimeMode,true);
+			
+			if(isTimeMode==false)
+			  document.getElementById("dtStartWork").value = document.getElementById("dtEndWork").value = document.getElementById("dtRideHrs").value = dtObj.value;
+			
+			console.info(newDate);
+            myDate = newDate;
+          },
+          cancel: function() {
+            console.info("Cancelled");
+          },
+          error: function (err) {
+            // Handle error. 
+            console.error(err);
+          }
+        });
+		
+	  }
+		
+	 </script>
+	</head>
+    <body onload="body_onload();">
+        
+		
+		
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=3><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD colspan=3><script language="javascript">CreateHeader();</script></TD></TR>
+		<TR><TD colspan=3 class="largeBlack">עדכון שעות עבודה</TD></TR>
+		<!--<TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>-->  
+		  <TR>
+			<TD  align="right"><DIV id="divCallCode" class="blackOnGray"></DIV></TD>
+	   	    <TD><IMG src="img/spacer.gif"></TD>
+	   	    <TD align="left"><BUTTON onclick="UpdateHours();" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		  <!--<TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>-->
+		  <TR>
+		    <TD colspan=3><DIV id="divCustName" class="blackOnGray"></DIV></TD>
+		  </TR> 		
+		  <TR>
+	        <TD colspan=3 align="right"><SPAN class="largeBlack" style="text-decoration:underline">העבודה הסתיימה</SPAN>&nbsp;
+		    <input type="radio" name="rdIsEnded" id="rdIsEndedTrue" value="כ"  style="height:25px; width:25px;"><span class="largeBlack">כן</span>&nbsp;<input type="radio" name="rdIsEnded" id="rdIsEndedFalse" value="ל" style="height:25px; width:25px;"><span class="largeBlack">לא</span>
+		    </TD> 
+		  </TR>
+		   <!--<TR><TD colspan=3><IMG src="img/spacer.gif" height=1></TD></TR>-->
+		   <TR>
+		     <TD colspan=3 align="right" dir="ltr"><span class="xLargeBlack" style="text-decoration:underline">נתונים שנרשמו לקריאה</span></TD>
+		  </TR>
+		  <TR>
+		     <TD colspan=3 align="right" dir="ltr"><span id="spnStartRide" class="xLargeBlack">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span class="largeBlack">:שעת התחלת נסיעה</span></TD>
+		  </TR>
+	      <TR>
+		    <TD colspan=3 align="right" dir="ltr"><span id="spnStartWork" class="xLargeBlack">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span class="largeBlack">:שעת התחלת עבודה</span></TD>
+		  </TR>
+		  <TR>
+		    <TD colspan=3 align="right" dir="ltr"><span id="spnEndWork" class="xLargeBlack">&nbsp;</span>&nbsp;&nbsp;&nbsp;<span class="largeBlack">:שעת סיום עבודה</span></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=20></TD></TR>
+		  <TR>
+		     <TD colspan=3 align="center" dir="ltr"><span class="xLargeBlack" style="text-decoration:underline">שעות לדיווח</span></TD>
+		  </TR>
+		  </TABLE>
+		  <TABLE dir="rtl" style="margin: 0 auto" border=1>
+		  <TR class="blackOnOrange"><TD>&nbsp;</TD><TD>תאריך</TD><TD>שעה</TD></TR>
+		  <TR><TD align="right" dir="ltr"><span class="largeBlack">:שעת התחלה</span></TD><TD><input type="button"  class="xLargeBlack" id="dtStartWork" onclick="OpenDateTimePicker(this,false);"  style="width:160px;"></TD><TD align="right" dir="ltr"><input type="button" id="txtStartWork" class="xLargeBlack" style="width:100px;"  onclick="OpenDateTimePicker(this,true)" /></TD></TR>
+		  <TR><TD align="right" dir="ltr"><span class="largeBlack">:שעת סיום</span></TD><TD><input type="button" class="xLargeBlack" id="dtEndWork" onclick="OpenDateTimePicker(this,false);"  style="width:160px;"></TD><TD align="right" dir="ltr"><input type="button" id="txtEndWork" class="xLargeBlack" style="width:100px;" onclick="OpenDateTimePicker(this,true)" /></TD></TR>
+		  <TR><TD align="right" dir="ltr"><span class="largeBlack">:שעות נסיעה</span></TD><TD><input type="button" class="xLargeBlack" id="dtRideHrs" onclick="OpenDateTimePicker(this,false);"  style="width:160px;"><TD  align="right" dir="ltr"><input type="button" id="txtRideHrs" class="xLargeBlack" style="width:100px;" onclick="OpenDateTimePicker(this,true)" /></TD></TR>
+		</TABLE>
+	    <DIV id="divFiller" >&nbsp;</DIV>
+		<TABLE id="tblFooterBtns" style="margin: 0 auto">
+		  <TR><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('techOffer.html');">המלצות לביצוע</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('supParts.html');">חלקים שסופקו</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('techSum.html');">סיכום טכנאי</BUTTON></TD></TR>
+		  <TR><TD id="tdCustSign"><BUTTON class="bottomMenu" onclick="UpdateAndExit('custSign.html');">חתימת הלקוח</BUTTON></TD><TD id="tdWorkHours"><BUTTON class="bottomMenuDisabled" disabled onclick="UpdateAndExit('updWorkHours.html');">עדכון שעות</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('camera.html');">תמונות</BUTTON></TD></TR>
+		</TABLE> 
+	 </DIV>		
+	 	  
+	  <script type="text/javascript" src="cordova.js"></script>
+      <script type="text/javascript" src="js/index.js"></script>
+   				
+    </body>
+</html>

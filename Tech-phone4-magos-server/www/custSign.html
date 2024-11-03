@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+		<title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="jSignature-min.js"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+	    
+		var g_CallCode = "";
+		var g_CallStatus = "";		
+		var g_signPicFileName ="";
+		
+		function IsEmptySignature(){
+		
+		  return  (g_signPicFileName.length==0  && signature.isEmptySignature("sign")); 
+		}
+		
+		function UpdateAndExit(targetWin){
+	      signPic = ""; 
+		  if (!IsEmptySignature() && g_CallStatus!=CALL_ENDED){
+			signPic = encodeURIComponent(signature.getSignatureCanvas('sign').toDataURL('image/png', 1.0));
+		  }
+		  if(typeof(targetWin)!="undefined")
+		    UpdData("op=updCallRep&callCode=" + g_CallCode + "&unitCode=0" + "&signerName=" + encodeURIComponent(document.getElementById("txtSignerName").value) + "&signerRole=" + encodeURIComponent(document.getElementById("txtSignerRole").value) + "&signerMail=" +  encodeURIComponent(document.getElementById("txtSignerMail").value) + "&signPicFileName=" + signPic + "&signComments=" + encodeURIComponent(document.getElementById("txtSignComments").value), false, targetWin + "?callCode=" + g_CallCode + "&unitCode=0" + "&custName=" + document.getElementById("divCustName").innerText + "&callStatus=" + g_CallStatus);
+		  else
+		    UpdData("op=updCallRep&callCode=" + g_CallCode + "&unitCode=0" + "&signerName=" + encodeURIComponent(document.getElementById("txtSignerName").value) + "&signerRole=" + encodeURIComponent(document.getElementById("txtSignerRole").value) + "&signerMail=" +  encodeURIComponent(document.getElementById("txtSignerMail").value) + "&signPicFileName=" + signPic + "&signComments=" + encodeURIComponent(document.getElementById("txtSignComments").value), false,null);
+		}
+        
+		
+		function body_onload(){
+	      g_CallCode = GetUrlVars()["callCode"];
+		  g_CallStatus = GetUrlVars()["callStatus"];
+		  
+		  document.getElementById("divCallCode").innerText = g_CallCode;
+		  document.getElementById("divCustName").innerText = decodeURIComponent(GetUrlVars()["custName"]);
+		  DisableUpdateForCallThatIsEnded(g_CallStatus);
+		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    UpdateHeader(g_CallCode);
+				  
+		    document.getElementById("txtSignerName").value = GetCallFld(g_CallCode,0,"repData","signerName");  
+		    document.getElementById("txtSignerRole").value = GetCallFld(g_CallCode,0,"repData","signerRole");  
+		    document.getElementById("txtSignerMail").value = GetCallFld(g_CallCode,0,"repData","signerMail"); 
+		    document.getElementById("txtSignComments").value = GetCallFld(g_CallCode,0,"repData","signComments"); 
+		  
+			var signPicFileName = GetCallFld(g_CallCode,0,"repData","signPicFileName");
+			console.log(signPicFileName);
+			if(signPicFileName && signPicFileName.length > 0){	
+		  
+		      var img = new Image;
+		      img.onload = function(){
+         	    var context = signature.getSignatureCanvas('sign').getContext('2d');
+	     	    context.drawImage(img,0,0); 
+             };
+             g_signPicFileName = signPicFileName;
+			 img.src = signPicFileName;
+		    }	
+		  },200);
+		  
+		  if(g_CallStatus == CALL_ENDED)
+		    document.getElementById("btnClearSign").style.display = "none";
+		  
+		  document.getElementById("divFiller").style.height =  (window.innerHeight - document.getElementById("tblFooterBtns").clientHeight-GetPosition(document.getElementById("divFiller")).y-20) + "px"; // "500px"; //(screen.availHeight - document.getElementById("tblFooterBtns").clientHeight-5) + "px"; 
+		
+		}
+		
+		</script>
+	</head>
+    <body onload="body_onload();">
+        		
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE cellpadding=0 cellspacing=0 dir="rtl" style="margin: 0 auto" width=320>
+		<TR><TD colspan=3><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD colspan=3><script language="javascript">CreateHeader(true);</script></TD></TR>
+		<TR><TD colspan=3 class="largeBlack" >חתימת הלקוח</TD></TR>
+		<!--<TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>-->  
+		  <TR>
+		  <TD colspan=2 align="right"><BUTTON onclick="window.location='callDtls.html?callCode=' + g_CallCode;" class="redYellowButton">פרטים</BUTTON> </TD>
+	   	  <TD align="left"><BUTTON onclick="UpdateAndExit('units.html');" class="redYellowButton">יציאה</BUTTON></TD>
+		</TR>
+		<TR class="blackOnGray">
+		  <TD align="right"><SPAN id="divCallCode" class="blackOnGray"></SPAN></TD><TD align="left"  colspan=2><SPAN id="divCustName" class="blackOnGray"></SPAN></TD>
+		</TR> 		
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>  
+		  <TR>
+		    <TD align="center"><DIV class="callDtlsRowHeader">שם החותם</DIV></TD>
+		    <TD><IMG src="img/spacer.gif" width=5></TD>
+			<TD align="center"><DIV class="callDtlsRowHeader">תפקיד</DIV></TD>
+		  </TR>
+		  <TR>
+		    <TD><INPUT type="text" id="txtSignerName" class="inputTxtWidth100Per"></TD>
+			<TD><IMG src="img/spacer.gif" width=5></TD>
+			<TD><INPUT type="text" id="txtSignerRole" class="inputTxtWidth100Per"></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>
+		    <TD colspan=3 align="center"><DIV class="callDtlsRowHeader">מייל לקבלת דוח הביצוע</DIV> 
+		    <INPUT type="text" id="txtSignerMail" class="inputTxtWidth100Per">
+			</TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR class="callDtlsRowHeader">
+		  <TD colspan=3 align="center"><DIV>הערות - חובה כאשר אין חתימת לקוח</DIV> 
+		    <TEXTAREA id="txtSignComments" rows="2" class="inputTxtWidth100Per"></TEXTAREA>
+		  </TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR> 
+		    <TD colspan=3 align="center"><!--<DIV class="callDtlsRowHeader">חתימה</DIV>--> 
+		     <INPUT type="button" id="btnSignature" value="חתימה" onclick="signDialog.showModal();" style="height:50px;width:320px">	 
+			</TD>
+		  </TR>
+		</TABLE>
+	    <DIV id="divFiller" >&nbsp;</DIV>
+		<TABLE id="tblFooterBtns" style="margin: 0 auto">
+		  <TR><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('techOffer.html');">המלצות לביצוע</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('supParts.html');">חלקים שסופקו</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('techSum.html');">סיכום טכנאי</BUTTON></TD></TR>
+		  <TR><TD><BUTTON class="bottomMenuDisabled" disabled onclick="UpdateAndExit('custSign.html');">חתימת הלקוח</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('updWorkHours.html');">עדכון שעות</BUTTON></TD><TD><BUTTON class="bottomMenu" onclick="UpdateAndExit('camera.html');">תמונות</BUTTON></TD></TR>
+		</TABLE>
+
+	  </DIV>		
+	  
+	  <DIALOG id="signDialog">
+   	    <FORM  method="dialog">
+		  <section>
+           <table>
+		   <tr><td align="right">
+		   <INPUT type="button" id="btnClearSign" onclick="signature.getSignatureCanvas('sign').clear();" value="נקה">
+		   </td></tr>		  
+		   <tr><td>
+		  <INPUT type="signature"  name="sign" data-background="yellow" data-pen="black" data-penWidth="3" data-width="310" data-height="180">
+		  </td></tr>
+		  <tr><td align="center">
+		  <button onclick="signDialog.close();" class="redYellowButton">OK</button>
+		  </td></tr></table>
+		  </SECTION>  
+		</FORM>
+	  </DIALOG>
+	  <script type="text/javascript" src="cordova.js"></script>
+      <script type="text/javascript" src="js/index.js"></script>
+		
+    </body>
+</html>

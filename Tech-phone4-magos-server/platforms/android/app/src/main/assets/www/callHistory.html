@@ -1,0 +1,336 @@
+﻿<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<link rel="stylesheet" href="css/autoComplete.css">
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+		
+		var g_custsArr = [];
+		var g_assocArr = [];
+		
+		/********************************************************************/
+	   	function SetSiteList(custNameObj,doEraseSiteName){
+		  
+		  		  
+		  //alert(typeof(g_assocArr[custNameObj.value]));
+		  if(typeof(g_assocArr[custNameObj.value])!="undefined"){
+		  
+		    $(function () {
+		    
+			  $("#txtSiteName").autocomplete({
+		          source: function (request, response) {
+		              var matcher = new RegExp("^" + $.ui.autocomplete.escapeRegex(request.term), "i");
+		              response($.grep(g_assocArr[custNameObj.value], function (item) {
+		                  return matcher.test(item);
+		              }));
+		          },
+                  messages: {
+		              noResults: '',
+		              results: function(){}
+		          },
+                  select: function (event, ui) { 
+				  				  
+				  },
+		      });
+		    });
+		  
+		  }
+		  
+		  if(doEraseSiteName)
+		    document.getElementById("txtSiteName").value="";
+		
+		
+		}
+		
+		/********************************************************************/
+	   	function LoadCustsList(){
+				
+		  var qryStr = "op=getAllSites";
+		  
+		    var json = GetData(qryStr);
+		    for(var i=0;i<json.length; i++) {
+		      if (typeof (json[i].siteName) != "undefined"){ 
+			    if(!g_custsArr.contains(json[i].custName))
+				  g_custsArr.push(json[i].custName);
+			    
+				var custName = json[i].custName;
+			    var siteName = json[i].siteName;
+				if(typeof(g_assocArr[custName])=="undefined")
+			      g_assocArr[custName] = [];  
+			    g_assocArr[custName].push(siteName);
+			  }
+		    }
+		}
+			
+		/********************************************************************/
+		function LoadData(){
+		  
+		  LoadCustsList();
+		  
+					
+		  $(function () {
+		    
+			$("#txtCustName").autocomplete({
+		          source: function (request, response) {
+		              var matcher = new RegExp("^" + $.ui.autocomplete.escapeRegex(request.term), "i");
+		              response($.grep(g_custsArr, function (item) {
+		                  return matcher.test(item);
+		              }));
+		          },
+                  messages: {
+		              noResults: '',
+		              results: function(){}
+		          },
+                  select: function (event, ui) { 
+				  				  
+				  },
+		      });
+		    });
+		  
+		  		  
+		  if(typeof(window.localStorage)!="undefined" && window.localStorage.getItem("SelCallCode")!=null){
+		    
+		    var json = GetData("op=getCallByCode&code=" + window.localStorage.getItem("SelCallCode"));
+		  
+		    document.getElementById("txtCustName").value = json[0].custName;
+		   	SetSiteList(document.getElementById("txtCustName"),false);	
+			document.getElementById("txtSiteName").value = json[0].siteName;
+	        document.getElementById("txtCallDate").value = TimeConverter(json[0].callDateTime, false);
+		  
+		  }
+		
+		}
+		
+		/********************************************************************/
+	   	function body_onload() {
+         		  
+		  
+		  var d = new Date();
+		  var year = d.getFullYear();
+		  var month = d.getMonth() + 1;
+		  var date = d.getDate();
+		  
+		  document.getElementById("txtCallDate").value =  date + "/" +  month + "/" + year; 
+		  		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		
+            LoadData(); 		
+	   
+		  },200);
+			 	
+		  window.localStorage.setItem("callHistory","1");
+		  document.getElementById("txtHistUser").value =  window.localStorage.getItem("HistUser")==null ?  window.localStorage.getItem("UserName") : window.localStorage.getItem("HistUser");
+		
+		  
+		  if(window.localStorage.getItem("SrchCriteria")!=null){
+		    var x = document.getElementsByName("rdCriteria");
+            for (i = 0; i < x.length; i++) { 
+		      if(x[i].value == window.localStorage.getItem("SrchCriteria")){ 
+		        x[i].checked = true;
+			    ShowSearchControls(x[i]);
+			  }
+			}
+	      }   
+		}
+		/********************************************************************/
+		function ShowSearchControls(rdObj){
+				  
+		  document.getElementById("trCallDate").style.display = "none";
+		  document.getElementById("trSiteName").style.display = "none";
+		  document.getElementById("trCustName").style.display = "none";
+          document.getElementById("txtCallCode").disabled = true;
+					
+		
+		  if(rdObj.value == "rbDate"){
+		    document.getElementById("trCallDate").style.display = "block";
+		    var d = new Date();
+			var year = d.getFullYear();
+			var month = d.getMonth() + 1;
+			var date = d.getDate();
+		  	document.getElementById("txtCallDate").value =  date + "/" +  month + "/" + year; 
+		  }	
+	
+          if(rdObj.value == "rbSiteName"){
+		    document.getElementById("trCustName").style.display = "block";
+			document.getElementById("trSiteName").style.display = "block";
+ 	      }
+  	   
+	      if(rdObj.value == "rbCallCode"){
+		     document.getElementById("txtCallCode").disabled = false;
+		  }	
+	   
+	      window.localStorage.setItem("SrchCriteria",rdObj.value);
+	   }
+	   
+	   /********************************************************************/
+	   function CheckDateValidity(str){
+        
+	     var regex = /^(0?[1-9]|[12][0-9]|3[01])[\/\-](0?[1-9]|1[012])[\/\-]\d{4}$/;
+		 return regex.test(str);
+	   
+	   }
+	   
+       /********************************************************************/
+	   	function DoQuery(){
+		
+		  var siteName = document.getElementById("txtSiteName").value;
+		  
+		  var histUser = document.getElementById("txtHistUser").value;
+		  window.localStorage.setItem("HistUser",document.getElementById("txtHistUser").value);
+		  if(histUser.trim()=="")
+		    histUser = "-1";
+		  
+		  
+		  if(document.getElementsByName("rdCriteria")[0].checked){
+		    window.location="callList.html?getHistCallsByAll=1&histByUser=" + histUser;
+		  }
+		  
+		  if(document.getElementsByName("rdCriteria")[1].checked){
+		  
+		    if(CheckDateValidity(document.getElementById("txtCallDate").value)==false){
+			  alert("יש להזין תאריך בפורמט dd/mm/yyyy")
+			  return;
+			}
+			
+			var res = document.getElementById("txtCallDate").value.split("/");
+		    var yr = res[2]; 
+		    var mnth = res[1];
+		    var dy = res[0];
+		    window.location="callList.html?getHistCallsByDate=" + ConvToUnixTimeStamp(new Date(yr + "-" + mnth + "-" + dy)) + "&histByUser=" + histUser; 
+	
+		  }
+		  
+		  if(document.getElementsByName("rdCriteria")[2].checked){
+		    window.location="callList.html?getHistCallsBySite=" + document.getElementById("txtSiteName").value  + "&histByUser=" + histUser;    	
+	      }
+		
+		  if(document.getElementsByName("rdCriteria")[3].checked){
+		    window.location="callList.html?getHistCallsByCallCode=" + document.getElementById("txtCallCode").value  + "&histByUser=" + histUser;   	
+	      }
+		}
+				
+	
+		/********************************************************************/
+	   	function UpdateAndExit(){
+		  
+		  window.localStorage.setItem("HistUser",window.localStorage.getItem("UserName"));
+		  window.location = "servicesMenu.html";
+		
+		}
+		
+		
+		
+		</script>
+	</head>
+    <body onload="body_onload();">
+    	<DIV id="mainDiv" style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE  dir="rtl" style="margin: 0 auto">
+		  <TR><TD ><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		  <TR><TD  class="largeBlack">היסטוריית קריאות</TD></TR>
+		  <TR><TD><IMG src="img/spacer.gif" height=10></TD></TR>  
+		  <TR>
+	   	    <TD align="left" colspan=3><BUTTON onclick="DoQuery();" class="redYellowButton">בצע</BUTTON>&nbsp;&nbsp;&nbsp;<BUTTON onclick="UpdateAndExit();" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		  <TR>
+		    <TD><IMG src="img/spacer.gif" height=10>
+		  </TR>
+		  <TR>
+		    <TD align="right">&nbsp;<span class="largeBlack">שם טכנאי</span>&nbsp;<input type="text" dir="ltr" id="txtHistUser"  class="inputTxt" size=10>&nbsp;&nbsp;&nbsp;&nbsp;<span class="largeBlack">("ריק" = כולם)</span></TD>
+		  </TR>
+		  <TR>
+		    <TD><IMG src="img/spacer.gif" height=10>
+		  </TR>
+		  <TR>
+	   	    <TD align="center" colspan=3 class="largeBlack"><U>בחר קריטריונים לשליפה:</U></TD>
+		  </TR>
+		  <TR>
+	   	    <TD align="center" colspan=3 class="largeBlack"><IMG src="img/spacer.gif" height=10></TD>
+		  </TR>
+		  <TR>
+		    <TD align="right">
+			  <input type="radio" name="rdCriteria" checked value="rbAll" class="inputTxt" onclick="ShowSearchControls(this);" style="height:25px; width:25px;"><span class="largeBlack">כולם</span><br>
+			  <br>
+			  <IMG src="img/spacer.gif" height=10>
+			  <br>
+			  <input type="radio" name="rdCriteria" value="rbDate" class="inputTxt" onclick="ShowSearchControls(this);" style="height:25px; width:25px;"><span class="largeBlack">לפי תאריך ביצוע</span><br>
+			  <br>
+			  <IMG src="img/spacer.gif" height=10>
+			  <br>
+			  <input type="radio" name="rdCriteria" value="rbSiteName" class="inputTxt" onclick="ShowSearchControls(this);" style="height:25px; width:25px;"><span class="largeBlack">לפי שם אתר</span><br>
+	           <br>
+			  <IMG src="img/spacer.gif" height=10>
+			  <br>
+			    <input type="radio" name="rdCriteria" value="rbCallCode" class="inputTxt" onclick="ShowSearchControls(this);" style="height:25px; width:25px;"><span class="largeBlack">לפי מספר קריאה&nbsp;<input type="text" class="inputTxt" id="txtCallCode" size=8 disabled></span>
+	        
+			</TD>
+		  </TR>
+		  <TR>
+		    <TD><IMG src="img/spacer.gif" height=10>
+		  </TR>
+		  <TR id="trCallDate" style="display:none;">
+		    <TD><span>הזן תאריך<br>(DD/MM/YYYY)</span></TD>
+			<TD colspan=2>
+		      <INPUT type='text' dir='rtl' id='txtCallDate' class='inputTxtWidth100Per' dir='rtl'>
+		    </TD>
+		  </TR>
+		  <TR id="trCustName" style="display:none;">
+		    <TD><span>הזן שם לקוח</span></TD>
+			<TD colspan=2>
+		      <INPUT type='text' dir='rtl' id='txtCustName' class='inputTxtWidth100Per' dir='rtl' onkeyup="SetSiteList(this,true);">
+		    </TD>
+		  </TR>
+		  <TR id="trSiteName" style="display:none;">
+		    <TD><span>הזן שם אתר</span></TD>
+			<TD colspan=2>
+		      <INPUT type='text' dir='rtl' id='txtSiteName' class='inputTxtWidth100Per' dir='rtl'>
+		    </TD>
+		  </TR>	
+		  <TR>
+		    <TD><IMG src="img/spacer.gif" height=10>
+		  </TR>
+		</TABLE> 						  
+	    </DIV>
+					
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+			
+    </body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+		
+		var g_CallCode = "";
+		var g_CallStatus = "";
+		var g_techSummary = "";	
+		var g_signPic = "";
+		var g_signComments = "";
+		var g_numExecRep = "";
+		var g_CallConfirm = 0;
+		var g_StartRide = 0;
+		var g_StartWork = 0;
+		var g_EndWork = 0;
+		var g_ExecRepFileName = "";
+		var g_Recommendation = ""; 
+		var g_SignerName = "";
+		var g_IsEnded = "";
+		var g_callHasUnits = false;
+		var g_isAllHandlingsDone = true; 
+		
+		///////////////////////////////////////////////////////////////////////////////////
+		function body_onload() {
+          g_CallCode = GetUrlVars()["callCode"];
+		  g_CallStatus = GetCallFld(g_CallCode,0,"main","callStatus");
+		  document.getElementById("divCallCode").innerText = g_CallCode;
+	 	  document.getElementById("divCustName").innerText = GetCallFld(g_CallCode,0,"main","custName");
+	 	  
+		  if(g_CallStatus == CALL_ENDED)
+		    document.getElementById("btnSync").disabled = true;
+		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    UpdateHeader(g_CallCode);
+			var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+  		    var relJson = {}; 
+			
+			var unitHandlingDataJson = {};
+		  	for(i=0;i<json.length;i++){
+			  if(json[i] && typeof(json[i].unitHandlingData)!="undefined")
+			    unitHandlingDataJson = JSON.parse(json[i].unitHandlingData);
+            }
+			
+			for(i=0;i<json.length;i++){
+			  if(json[i] && typeof(json[i].repData)!="undefined"){
+				var repDataJson = JSON.parse(json[i].repData);
+				for(var j=0;j<repDataJson.length;j++) { 
+			      if(repDataJson[j] && repDataJson[j].unitCode==0)
+			        relJson = repDataJson[j]; 
+			      if(repDataJson[j] && repDataJson[j].unitCode>0) {
+                     g_callHasUnits = true;
+					 var unitCode = repDataJson[j].unitCode;
+					 var isAllHandlingsDone = CheckAllHandlingsDoneForUnit(unitHandlingDataJson , unitCode);
+				 	 if(!isAllHandlingsDone) {
+					   g_isAllHandlingsDone = false;
+					 }
+				  } 				  
+				}
+			  } 	
+			}
+						
+			g_techSummary = relJson.summary; 
+		    g_signPic = relJson.signPicFileName;
+		    g_signComments = relJson.signComments;
+			g_SignerName = relJson.signerName;
+		    g_SignerRole = relJson.signerRole;
+			g_SignerMail = relJson.signerMail;
+			g_numExecRep = relJson.numExecRep;
+			g_CallConfirm = relJson.dtCallConfirm;	
+			g_StartRide = relJson.dtStartRide;
+		    g_StartWork = relJson.dtStartWork;
+		    g_EndWork = relJson.dtEndWork; 
+		    g_ExecRepFileName = relJson.execRepFileName;
+		    g_Recommendation =  relJson.recommendation;
+		    g_IsEnded = relJson.isEnded;
+			
+		   
+		   if(relJson.dtCallConfirm!=0 || g_CallStatus == CALL_ENDED){
+		      document.getElementById("btnCallConfirm").className = "callActionsMenuButDisabled";
+			  document.getElementById("btnCallConfirm").disabled = true;
+		   }
+		   
+		   if(relJson.dtEndWork!=0 || g_CallStatus == CALL_ENDED) {
+		      document.getElementById("btnStartRide").className = "callActionsMenuButDisabled";
+			  document.getElementById("btnStartRide").disabled = true;
+		      document.getElementById("btnStartWork").className = "callActionsMenuButDisabled";
+			  document.getElementById("btnStartWork").disabled = true;
+		    }
+			
+			if(relJson.dtStartRide!=0 || g_CallStatus == CALL_ENDED){
+		      document.getElementById("btnStartRide").disabled = true;
+		      document.getElementById("btnStartRide").className = "callActionsMenuButDisabled";
+		    }
+		
+			if(relJson.dtStartWork!=0 || g_CallStatus == CALL_ENDED){
+		      document.getElementById("btnStartWork").className = "callActionsMenuButDisabled";
+			  document.getElementById("btnStartWork").disabled = true;
+			}
+			
+			if(g_CallStatus == CALL_ENDED){
+			  //document.getElementById("btnUpdateWorkHours").className = "callActionsMenuButDisabled";
+			  //document.getElementById("btnUpdateWorkHours").disabled = true;
+		      document.getElementById("btnEndMission").className = "callActionsMenuButDisabled";
+			  document.getElementById("btnEndMission").disabled = true;
+            }
+			
+		  },200);
+		}
+		
+		///////////////////////////////////////////////////////////////////////////////////
+		function CheckAllHandlingsDoneForUnit(unitHandlingDataJson , unitCode) {
+          unitHasHandlings = false;
+		  isUnitDone = true;
+		  for(var j=0;j<unitHandlingDataJson.length;j++) {
+		    if (unitHandlingDataJson[j] && unitHandlingDataJson[j].unitCode == unitCode) {
+         	  unitHasHandlings = true;
+			  if(unitHandlingDataJson[j].isDone == false)
+			    isUnitDone = false; 
+			}
+		  }
+		  return !unitHasHandlings || (unitHasHandlings && isUnitDone); 
+		}		
+		
+		///////////////////////////////////////////////////////////////////////////////////
+		function UpdateEndMission(){
+			 
+				 
+		 if(TimeConverter(g_StartWork,true,true)=="0:00" || TimeConverter(g_StartWork,true,true)=="00:00"){
+		   alert("שעת התחלה - אין אפשרות הקלדת שעה 00:00, נא לתקן")
+		   return;
+		 }
+				 
+		 if(TimeConverter(g_EndWork,true,true)=="0:00" || TimeConverter(g_EndWork,true,true)=="00:00"){
+		   alert("שעת סיום - אין אפשרות הקלדת שעה 00:00, נא לתקן")
+		   return;
+		 }
+		 
+		 if(!g_callHasUnits && (g_techSummary==null || g_techSummary.trim()=="")){ 
+		   alert("חסר סיכום טכנאי");
+		   return;
+		 }
+		 if((g_signPic==null || g_signPic.trim()=="") && (g_signComments==null || g_signComments.trim()=="")){  
+		   alert("חסרה חתימת לקוח או הערה במקרה שאין חתימה");    
+		   return;
+		 }
+		 if(g_numExecRep==null || g_numExecRep.trim()==""){  
+		   alert("חסר דוח ביצוע לקריאה");    
+		   return;
+		 }
+         
+         if(g_EndWork==0){
+           alert("חסרה שעת סיום");
+		   return;
+		 }		 
+		 
+		 if(g_SignerName.trim()==""){
+		   alert("חסר שם החותם");
+		   return;
+		 }
+		 
+		 if(!g_callHasUnits && g_IsEnded != "1" &&  (g_Recommendation==null || g_Recommendation.trim().length == 0)){
+		   alert("שים לב! הקריאה לא הסתיימה, חובה לרשום המלצות טכנאי");
+		   return;
+		 }
+		 
+		 var supPartsDataJson = GetCallFld(g_CallCode,0,"supPartsData","");
+		 supPartsExists = false;
+		 zeroQuantity = false;
+		 for(i=0;i<supPartsDataJson.length;i++){
+		   if(supPartsDataJson[i] && typeof(supPartsDataJson[i]["unitCode"])!="undefined" && supPartsDataJson[i]["unitCode"]==0)
+		     supPartsExists = true; 
+	  	   if(supPartsDataJson[i] && typeof(supPartsDataJson[i]["quantity"])!="undefined" && supPartsDataJson[i]["quantity"]==0)
+		     zeroQuantity = true; 
+		 }
+		 		 	 
+		 if(!supPartsExists){
+		   alert("הודעת אזהרה" + "\r\n\r\n" + "שים לב! לא נרשמו חלקים")
+		 }
+			 
+		 if(zeroQuantity)
+		   alert("הודעת אזהרה" + "\r\n\r\n" + "שים לב! לא נרשמה כמות בכל שורות הפריטים")
+		 
+		 
+         ////if (g_callHasUnits && !confirm('?לא בוצע טיפול לכל היחידות! האם לסיים בכל זאת')) {
+		   ////return;  
+		 ////} 		
+		
+		 SyncOfflineQueriesToServer(g_CallCode, 'callList.html?reloadAfterEndMission=1',true,true);
+		 // update calls count
+		 qryStr = "op=getCallsCount&userCode=" + window.localStorage.getItem("UserName");
+		 window.localStorage.removeItem(qryStr); 
+		}
+		
+		
+		///////////////////////////////////////////////////////////////////////////////////
+		function ExitToCallLIst(){
+		  
+		  if(window.localStorage.getItem("getHistCalls")!=null)		
+		    window.location='callList.html?' + window.localStorage.getItem("getHistCalls");  
+		  else
+		    window.location='callList.html';
+		}
+		
+		///////////////////////////////////////////////////////////////////////////////////
+		function UpdateAndExit(){
+		}
+		
+		</script>
+	</head>
+    <body onload="body_onload();">
+        
+		
+		
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=3><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD  colspan=3><script language="javascript">CreateHeader(true);</script></TD></TR>
+		<TR><TD colspan=3 class="largeBlack">פעולות לקריאה</TD></TR>
+		<!--<TR><TD colspan=3><IMG src="img/spacer.gif" height=20></TD></TR>-->  
+		  <TR>
+			<TD colspan=2 align="right"><BUTTON onclick="window.location='callDtls.html?callCode=' + g_CallCode;" class="redYellowButton">פרטי הקריאה</BUTTON> </TD>
+	   	    <TD align="left"><BUTTON onclick="ExitToCallLIst();" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		  <TR class="blackOnGray">
+		    <TD align="right"><SPAN id="divCallCode" class="blackOnGray"></SPAN></TD><TD align="right"  colspan=2><SPAN id="divCustName" class="blackOnGray"></SPAN></TD>
+		  </TR> 		
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>
+		    <TD><BUTTON id="btnCallConfirm"  class="callActionsMenuBut" onclick="UpdData('op=updCallRep&callCode=' + g_CallCode + '&unitCode=0&dtCallConfirm=' + ConvToUnixTimeStamp(new Date()) + '&callStatus=31',false , 'callActions.html?callCode=' + g_CallCode  + '&custName=' + document.getElementById('divCustName').innerText);">אישור קבלה</BUTTON></TD>
+		    <TD><BUTTON id="btnStartRide" class="callActionsMenuBut" onclick="UpdData('op=updCallRep&callCode=' + g_CallCode + '&unitCode=0&dtStartRide=' + ConvToUnixTimeStamp(new Date()) + '&callStatus=32',false);SyncOfflineQueriesToServer(g_CallCode , 'callActions.html?callCode=' + g_CallCode  + '&custName=' + document.getElementById('divCustName').innerText,false);">התחלת נסיעה</BUTTON></TD>
+		    <TD><BUTTON id="btnStartWork" class="callActionsMenuBut" onclick="UpdData('op=updCallRep&callCode=' + g_CallCode + '&unitCode=0&dtStartWork=' + ConvToUnixTimeStamp(new Date()) + '&callStatus=33',false);SyncOfflineQueriesToServer(g_CallCode, 'callActions.html?callCode=' + g_CallCode  + '&custName=' + document.getElementById('divCustName').innerText,false);">התחלת עבודה</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>
+		    <TD><BUTTON id="btnExecRep" class="callActionsMenuBut" onclick="UpdData('op=updCallRep&callCode=' + g_CallCode + '&unitCode=0&callStatus=34',false , 'units.html?callCode=' + g_CallCode  + '&custName=' + document.getElementById('divCustName').innerText + '&callStatus=' + g_CallStatus);">דוח ביצוע</BUTTON></TD>
+		    <TD><BUTTON  class="callActionsMenuBut" onclick="window.location='updWorkHours.html?referer=callActions.html&callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">עדכון שעות</BUTTON></TD>
+		    <TD><BUTTON id="btnRequests" class="callActionsMenuBut" onclick="window.location='requests.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">בקשות הודעות</BUTTON></TD>
+		  </TR>	
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>
+		      <TD><BUTTON id="btמProduceRep" class="callActionsMenuBut" onclick="QueryForExecRep(g_CallCode,1,null,null,null,true);">הפק דוח ביצוע</BUTTON></TD>
+			  <TD><BUTTON id="btnExecRep" class="callActionsMenuBut" onclick="ShowExecRep(g_CallCode);">הצג דוח ביצוע</BUTTON></TD>
+		      <TD><BUTTON id="btnEndMission" class="callActionsMenuBut" onclick="UpdateEndMission();">סיום משימה</BUTTON></TD>
+		  </TR>
+		  
+		</TABLE>
+	  </DIV>		
+	  
+	  <DIALOG id="isJobDoneDialog" style="width:200px;">
+   	    <FORM  method="dialog">
+		  <section>
+           <table dir="rtl" align="right">
+		   <tr><TD colspan=3 align="right" class="largeBlack" width="200">העבודה הסתיימה?</TD></tr>		  
+		   <tr><td colspan=3><IMG src="img/spacer.gif" height=20></td></tr>
+		    <tr>
+		      <td><button class="bottomMenu" style="width:70px;" onclick="g_IsEnded = 1; document.getElementById('isJobDoneDialog').close(); setTimeout(function(){ UpdateEndMission();},200); ">כן</button></td>
+		      <td>&nbsp;
+			  <td><button class="bottomMenu" style="width:70px;" onclick="g_IsEnded = 0; document.getElementById('isJobDoneDialog').close(); setTimeout(function(){ UpdateEndMission();},200);">לא</button></td> 
+		    </tr>
+		  </table>
+		  </SECTION>  
+		</FORM>
+	  </DIALOG>
+	  
+	  <script type="text/javascript" src="cordova.js"></script>
+      <script type="text/javascript" src="js/index.js"></script>
+   				
+    </body>
+</html>

@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>s
+		<script type="text/javascript">
+		
+						
+		/********************************************************************/
+	   	function UpdateAndExit(doCancelMission){
+		  
+		  if(doCancelMission==false){
+		    window.location = "servicesMenu.html";  
+		    return;
+		  }
+		  
+		  var qryStr = "op=getAllCalls&includeHistory=1&callCode=" +  document.getElementById("txtCallID").value;
+		  ShowRelaxUser('relaxUserDlg',window.localStorage.getItem(qryStr)==null);
+		  setTimeout(function(){			
+		   
+		    var json = GetData(qryStr);
+		    
+			if(typeof(json[0].code)=="undefined"){
+			  alert("קריאה לא נמצאה");
+		      return;
+			}
+		    
+			if(json[0].callStatus == CALL_ENDED && json[0].userCode.toLowerCase().trim() == window.localStorage.getItem("UserName").toLowerCase().trim()){
+		      
+			  itm = "op=getCallRep&callCode=" + json[0].code;
+	          json = GetData(itm);
+			  json[0]["callStatus"] = 33;
+              window.localStorage.setItem(itm,JSON.stringify(json));
+			  qryStr = "callCode=" + json[0].code;
+              qryStr += "&syncToServer=1";
+			  //qryStr = 'op=updCallRep&callCode=' + document.getElementById("txtCallID").value + '&endMission=0&callStatus=33&syncToServer=1';
+		      UpdData(qryStr,false,"servicesMenu.html?callCodeForFtpRequestAfterCancelEndMission=" + json[0].code);
+		    }
+			else
+			  alert("קריאה לא הסתיימה או שייכת למשתמש אחר");
+		  },200);
+		}
+	    
+		function body_onload(){
+		
+		 if(window.localStorage.getItem("SelCallCode")!=null  && window.localStorage.getItem("SelCallStatus")!=null && window.localStorage.getItem("SelCallStatus")==CALL_ENDED)
+		   document.getElementById("txtCallID").value = window.localStorage.getItem("SelCallCode"); 
+		}		
+		</script>
+	</head>
+    <body onload="body_onload();">
+    	<DIV id="mainDiv" style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE  dir="rtl" style="margin: 0 auto">
+		  <TR><TD colspan=2><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		  <TR><TD colspan=2 class="largeBlack">ביטול סיום משימה</TD></TR>
+		  <TR><TD colspan=2><IMG src="img/spacer.gif" height=10></TD></TR>  
+		  <TR>
+			<TD align="left" class="largeBlack">מספר קריאה:</TD><TD align="right"><INPUT type='text'  id='txtCallID' class='inputTxtWidth100Per'  style='width:200px;' dir='rtl'  ></TD>
+		  </TR>
+		  <TR><TD colspan=2><IMG src="img/spacer.gif" height=10></TD></TR>  
+		  <TR>
+	  		<TD colspan=1 align="center"><BUTTON onclick="UpdateAndExit(true);" class="redYellowButton">בצע</BUTTON></TD>
+	   	    <TD align="right"><BUTTON onclick="UpdateAndExit(false);" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		</TABLE> 						  
+	    <!--</DIV>
+		<DIV id="divTable" style="position:absolute;top:30%;height:60%;width:100%;text-align:right;align:right;overflow-y:auto;overflow-x:auto;">
+		-->
+		</DIV>			
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+			
+    </body>
+</html>

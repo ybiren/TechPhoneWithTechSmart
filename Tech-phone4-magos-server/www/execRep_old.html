@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+		
+		var g_CallCode = "";
+		
+		function body_onload() {
+        	
+          g_CallCode = GetUrlVars()["callCode"];
+		  document.getElementById("divCallCode").innerText = g_CallCode;
+		  document.getElementById("divCustName").innerText = decodeURIComponent(GetUrlVars()["custName"]);
+		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){	
+		    var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+  		    		  
+		    if(json[0].dtEndWork==0){
+		      document.getElementById("btnUpdateWorkHours").className = "whiteOnGray";
+			  document.getElementById("btnUpdateWorkHours").disabled = true;
+		    }
+		    			
+			if(json[0].dtEndWork!=0 || json[0].summary==null || json[0].summary.trim()=="" || json[0].signPicFileName==null || json[0].signPicFileName.trim()=="" || json[0].numExecRep==null || json[0].numExecRep.trim()==""){
+		      document.getElementById("btnEndWork").className = "whiteOnGray";
+			  document.getElementById("btnEndWork").disabled = true;
+		    }
+		  },200);
+		}
+		
+		function UpdateAndExit(){
+		  
+		   window.location = "callActions.html?callCode=" + g_CallCode + "&custName=" + document.getElementById("divCustName").innerText;
+		}
+		
+		function UpdateEndWork(){
+		  UpdData('op=updCallRep&callCode=' + g_CallCode + '&dtEndWork=' + ConvToUnixTimeStamp(new Date()) ,false , 'callActions.html?callCode=' + g_CallCode + "&custName=" + document.getElementById("divCustName").innerText);
+		}
+		
+		
+		</script>
+	</head>
+    <body onload="body_onload();">
+        
+	   
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=3><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD colspan=3 class="largeBlack">דוח ביצוע לקריאה</TD></TR>
+		  <TR>
+			<TD  align="right"><DIV id="divCallCode" class="blackOnGray"></DIV></TD>
+	   	    <TD><IMG src="img/spacer.gif"></TD>
+	   	    <TD align="left"><BUTTON onclick="UpdateAndExit();" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		  <TR>
+		    <TD colspan=3><DIV id="divCustName" class="blackOnGray"></DIV></TD>
+		  </TR> 		
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON style="width:80%;" class="redYellowButton" onclick="window.location='techSum.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">סיכום טכנאי</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center" ><BUTTON style="width:80%;" class="redYellowButton" onclick="window.location='techOffer.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">המלצות טכנאי</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON style="width:80%;" class="redYellowButton" onclick="window.location='supParts.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">חלקים שסופקו</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON style="width:80%;" class="redYellowButton" onclick="window.location='custSign.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">חתימת הלקוח</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON id="btnEndWork" style="width:80%;" class="redYellowButton" onclick="UpdateEndWork();">סיום עבודה</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON style="width:80%;" class="redYellowButton" onclick="window.location='camera.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">תמונות</BUTTON></TD>
+		  </TR>
+		  <TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		  <TR>  
+	   		 <TD colspan=3 align="center"><BUTTON id="btnUpdateWorkHours" style="width:80%;" class="redYellowButton" onclick="window.location='updWorkHours.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('divCustName').innerText">עדכון שעות עבודה</BUTTON></TD>
+		  </TR>
+        </TABLE>
+	  </DIV>		
+	  <script type="text/javascript" src="cordova.js"></script>
+      <script type="text/javascript" src="js/index.js"></script>
+   		
+    </body>
+</html>

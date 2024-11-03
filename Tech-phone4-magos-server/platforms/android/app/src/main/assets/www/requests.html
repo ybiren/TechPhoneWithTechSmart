@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+	 
+		var g_CallCode = "";
+		var g_CustName =  "";
+		
+		function UpdateAndExit(targetWin){
+		  
+		    if(document.getElementById("selReq").selectedIndex != -1)	  
+		      QueryForExecRep(g_CallCode,2,document.getElementById("selReq").value,document.getElementById("txtReqRemarks").value,null,true); 
+			else{
+			  alert("לא נבחרה כל אפשרות");
+			  window.location = "callActions.html?callCode=" + g_CallCode + "&custName=" + g_CustName;
+	        }	
+		}
+		
+		function body_onload() {
+          g_CallCode = GetUrlVars()["callCode"];
+  		  g_CustName = decodeURIComponent(GetUrlVars()["custName"]);
+	
+		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+			if(json[0].reqInd=="-1")
+			  document.getElementById("selReq").selectedIndex = -1;
+			else
+			  document.getElementById("selReq").selectedIndex = json[0].reqInd-1; 
+			
+			document.getElementById("txtReqRemarks").value = json[0].reqRemarks;
+		  },200);
+	
+		}
+		
+		</script>
+	
+	</head>
+    <body onload="body_onload();">
+       
+		
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		<TR>
+		  <TD align="right" class="largeBlack"><B><U>בקשות/הודעות</U></B></TD>
+		  <TD>&nbsp;</TD>
+		  <TD align="left"><BUTTON onclick="UpdateAndExit('callActions.html');" class="redYellowButton">יציאה</BUTTON></TD>
+		</TR>
+		<TR><TD colspan=3><IMG src="img/spacer.gif" height=2></TD></TR>
+		<TR>
+		  <TD colspan=3 align="right"><SPAN  class="largeBlack">1. הקריאה לא בוצעה (לפרט סיבה בהערות)</SPAN></TD> 
+		</TR>
+		<TR>
+		  <TD colspan=3 align="right"><SPAN  class="largeBlack">2. נא לבטל את הקריאה (לפרט סיבה בהערות)</SPAN></TD> 
+		</TR>
+		<TR>
+		  <TD colspan=3 align="right"><SPAN  class="largeBlack">3. נא להוסיף קריאה נוספת (לפרט בהערות)</SPAN></TD> 
+		</TR>
+		<TR>
+		  <TD colspan=3 align="right"><SPAN  class="largeBlack">4. בטול בקשה אחרונה</SPAN></TD> 
+		</TR>
+		<TR>
+		  <TD colspan=3 align="right"><SPAN  class="largeBlack">5. הודעה (לפרט בהערות)</SPAN></TD> 
+		</TR>
+		<TR><TD colspan=3><IMG src="img/spacer.gif" height=10></TD></TR>
+		<TR>
+		  <TD><span class="xLargeBlack">הזן את בחירתך</span>
+		  <select id="selReq" class="inputTxt">      
+			<option>1</option>     
+			<option>2</option>     
+			<option>3</option>     
+		    <option>4</option>
+			<option>5</option>
+		  </select>
+		  </TD> 
+		<TR><TD colspan=3><IMG src="img/spacer.gif" height=5></TD></TR>
+		<TR class="callDtlsRowHeader">
+		  <TD colspan=3 align="center"><DIV>הערות לבקשה</DIV> 
+		    <TEXTAREA id="txtReqRemarks" rows="6" class="inputTxtWidth100Per"></TEXTAREA>
+		  </TD>
+		<TR>  
+	 	</TABLE>
+	
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+	
+    </body>
+</html>

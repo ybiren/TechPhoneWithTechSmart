@@ -1,0 +1,140 @@
+
+.blackOnGreen{
+ background-color:lightgreen;
+ }
+ 
+ .col-xs-10.col-xs-offset-1.blackOnGreen{
+   height:10vh; 
+   font-size: x-large;
+   justify-content: center;
+ }
+ 
+#bdy{
+  background-color:#FFFFCC;
+  margin-top:0;
+  padding-top:0;
+}
+
+.blackOnLightBlue{
+ background-color:lightblue;
+}
+
+.blackOnOrange{
+ background-color:lightgray;
+}
+
+.blackOnOlive{
+ background-color:#A2AB58 ;
+}
+
+.blackOnWhite{
+ background-color:#FFFFFF ;
+}
+
+.brdr{
+ border:1px solid black;
+}
+
+.marginR{
+  margin-left:18px;
+}
+
+.marginR-5{
+  margin-left:6px;
+}
+
+
+.xxLargeRed{
+  font-size: xx-large;
+  color: #FF4000;; 
+}
+
+.largeRed{
+  font-size: large;
+  color: #FF4000;; 
+}
+
+#tdSync{
+ background-color:lightgray;
+}
+
+.vertical-align {
+    display: flex;
+    align-items: center;
+}
+
+SECTION{
+margin-top:20px;	
+}
+
+BUTTON{
+ text-align:center	
+}
+
+.dtlsTbl{
+  height:250px;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.row.contactMan{
+  margin-top:5px;	
+
+}	
+
+
+.row {
+  font-size:large;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
+  flex-wrap: wrap;
+}
+.row > [class*='col-'] {
+  display: flex;
+  flex-direction: column;
+}
+
+input[type=text]{
+  direction:RTL;
+}
+
+.header{
+margin-top:10px;
+}
+.buttons-header{
+margin-bottom:20px;
+}
+
+.buttons-footer{
+margin-top:10px;
+}	
+
+.contactSection{
+  top:450px;
+  width:100%;
+  position:absolute;
+}
+.contactMan{
+  background-color:yellow;
+  padding-bottom:15px;
+}
+
+.btnHeader{
+   background-color:orange !important;
+   min-height:40px !important;
+   font-size:smaller; 
+   font-style:bold;
+
+}
+
+.row > div{
+  padding:0;
+}
+
+.smaller-font{
+  font-size:smaller;
+ }
+
+#cover {position: absolute;top: 0px;left: 0px;z-index: 10000;visibility: hidden;opacity: 0.50;filter: alpha(opacity=50);background-color:Black;}

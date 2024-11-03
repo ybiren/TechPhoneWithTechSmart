@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="../drivers/css/index3.css" />
+        <title>פינויים</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="driversGlobalfuncs.js"></script>
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ 		<script type="text/javascript">
+		
+		var g_CurrInvNum = -1; 
+        var g_SelRow;		
+		
+		/********************************************************************/
+		function AddRow(dat){
+	    	  
+           var rowTemplate = '<DIV contactName="[[contactName]]" invNum="[[invNum]]" contactPhone="[[contactPhone]]" contactMobile="[[contactMobile]]" address="[[address]]" invGuid="[[invGuid]]" onmousedown="PreSetRow();" onmouseup="SetContact(this);SetInvNum(this);" class="row">' + 
+	                   '<DIV class="col-xs-offset-1 col-xs-4 text-right [[invStatus]] brdr smaller-font" >[[custName]]</DIV>' +
+	                   '<DIV class="col-xs-4 text-right [[invStatus]] brdr smaller-font" >[[siteName]]</DIV>' +
+	                   '<DIV class="col-xs-3 text-center [[invStatus]] brdr smaller-font" style="width:80px;">[[invNum]]</DIV>' +
+	                   '</DIV>';	   	
+		
+		      
+			 var selInvNum = window.sessionStorage.getItem('selInvNum');
+			 if(selInvNum!==null && selInvNum!==undefined && selInvNum==dat.invNum){
+			   rowTemplate = rowTemplate.replaceAll("[[invStatus]]", (dat.invStatus == CALL_ENDED) ?  "blackOnWhite" : "blackOnGreen");     
+			   g_CurrInvNum = selInvNum; 
+			 } 		 
+			 else{
+			   rowTemplate = rowTemplate.replaceAll("[[invStatus]]", (dat.invStatus == CALL_ENDED) ?  "blackOnOrange" : "blackOnOlive");     
+			 }
+			 
+			 rowTemplate = rowTemplate.replace("[[custName]]",dat.custName);
+		     rowTemplate = rowTemplate.replace("[[siteName]]",dat.siteName);
+			 rowTemplate = rowTemplate.replaceAll("[[invNum]]",dat.invNum);
+		     rowTemplate = rowTemplate.replace("[[contactName]]",dat.contactName);
+		     rowTemplate = rowTemplate.replace("[[contactPhone]]",dat.contactPhone);
+		     rowTemplate = rowTemplate.replace("[[contactMobile]]",dat.contactMobile);
+		     rowTemplate = rowTemplate.replace("[[address]]",dat.address.replace('"',"&quot;"));
+		     rowTemplate = rowTemplate.replace("[[invGuid]]",dat.invGuid);
+		     			 
+			 var container = document.querySelector(".dtlsTbl");
+			 container.innerHTML += rowTemplate; 
+		}
+
+        /********************************************************************/
+		function PreSetRow(){
+          //var container = document.querySelector(".dtlsTbl");
+		  var origOuterHTML = $(".dtlsTbl").prop('outerHTML');
+		  var scrollTop = $(".dtlsTbl").prop("scrollTop");
+
+		  //active invs
+		  origOuterHTML = origOuterHTML.replaceAll("blackOnGreen","blackOnOlive");
+		  $(".dtlsTbl").prop('outerHTML',origOuterHTML);  
+		  //ended invs
+		  $(".dtlsTbl").prop('outerHTML',origOuterHTML.replaceAll("blackOnWhite","blackOnOrange"));  
+		  
+		  
+		  
+		  //container.outerHTML = container.outerHTML.replaceAll("blackOnGreen","blackOnOlive");
+		  $(".dtlsTbl").scrollTop(scrollTop);
+		}		
+		
+	    /********************************************************************/
+		function SetContact(row){
+          g_SelRow = row;
+		  window.sessionStorage.setItem('selInvNum', g_SelRow.getAttribute("invNum"));
+		  document.querySelector(".contactSection").style.visibility = "visible";
+		  var outerHTML = row.outerHTML.replaceAll("blackOnOlive","blackOnGreen");
+		  outerHTML = outerHTML.replaceAll("blackOnOrange","blackOnWhite");
+		  row.outerHTML = outerHTML;
+		  document.querySelector("#contactName").innerHTML = `${row.getAttribute("contactname")}`;
+		  document.querySelector("#contactPhone").innerHTML = `${row.getAttribute("contactphone")}`;
+	  	  document.querySelector("#contactPhone").phone = `${row.getAttribute("contactphone")}`;
+		  document.querySelector("#contactMobile").innerHTML = `${row.getAttribute("contactmobile")}`;
+		  document.querySelector("#contactMobile").phone = `${row.getAttribute("contactmobile")}`;
+		} 		
+	    
+		/********************************************************************/
+		function SetInvNum(row){
+		  g_CurrInvNum = row.getAttribute("invNum");
+		}
+		
+		/********************************************************************/
+		function SyncInvContentPhoneWithServer(){
+		
+		  var qryStr = `op=invByNum&invNum=${g_CurrInvNum}`;
+		  if(window.localStorage.getItem(qryStr)!=null){
+	        var updatedInvGuid = `${g_SelRow.getAttribute("invGuid")}`
+			var json = JSON.parse(window.localStorage.getItem(qryStr));
+        	if(json[0]!==undefined && json[0].invGuid!==undefined && json[0].invGuid!=updatedInvGuid){ 
+			  window.localStorage.removeItem(qryStr);
+		    }
+		  }
+		}
+		
+		/********************************************************************/
+		function onDialSuccess(result){
+			//alert("Success:"+result);
+		}
+
+		function onDialError(result) {
+			alert("Error:"+result);
+		}
+		
+		/********************************************************************/
+	    function Dial(that){ 	
+			var number = that.phone.replace("-","");
+			window.plugins.CallNumber.callNumber(onDialSuccess, onDialError, number);
+		}
+		/********************************************************************/
+	    function NavToExecRep(nonAccomplished){
+          if(g_CurrInvNum!=-1){
+		  if(nonAccomplished === undefined)
+		    window.location = "execRep.html?invNum=" + g_CurrInvNum;
+	      else
+		    window.location = "execRep.html?invNum=" + g_CurrInvNum + "&nonAccomplished=1";
+	 	  }
+		  else
+		    alert("יש לבחור הזמנה");
+		}		
+		/********************************************************************/
+	   	function OpenWaze(){
+            if(g_SelRow) {
+				var addr = g_SelRow.getAttribute('address');
+				launchnavigator.isAppAvailable(launchnavigator.APP.WAZE, function(isAvailable){
+				var app;
+				if(isAvailable){
+					app = launchnavigator.APP.WAZE;
+				}else{
+					alert("Waze is not available");
+					app = launchnavigator.APP.USER_SELECT;
+				}
+				launchnavigator.navigate(addr, {
+				app: app
+				});
+				});
+       		}		
+		    else
+		      alert("יש לבחור הזמנה");
+	    }		
+	   /********************************************************************/
+	   function body_onload() {
+         
+		 var dt = GetUrlVars()["dt"];
+		 if(dt===undefined){
+		   dt = window.sessionStorage.getItem('dt');
+		 }
+		 document.getElementById("ttlDiv").innerHTML = `${dt} הזמנות לתאריך`;
+		 document.querySelector(".contactSection").style.visibility = "hidden";
+		 ShowRelaxUser('relaxUserDlg',true);
+	     setTimeout(function(){			
+		   UpdateHeader(-1);
+		   json = GetData("op=invs&userCode=" + localStorage.getItem("UserName")+ "&dt=" + dt);
+		   document.querySelector("#tdNumInvs").innerHTML = json.length -1;
+		   //document.querySelector("#tdNumActiveInvs").innerHTML = json.filter((item)=>{return item.invStatus==CALL_ACTIVE}).length;
+		   
+		   for(i=0;i<json.length;i++)
+		     if(json[i] && json[i].siteName!==undefined)
+			   AddRow(json[i]);			
+		   
+		   var invRows = document.querySelectorAll(".dtlsTbl > DIV");
+           for(var i=0;i<invRows.length;i++){ 		   
+		     if(g_CurrInvNum == invRows[i].getAttribute("invNum"))
+			   SetContact(invRows[i]);
+		   } 	 
+		 
+		 },200)
+		 
+		 
+		}
+		/********************************************************************/
+		</script>
+	</head>
+    <body id="bdy" onload="body_onload();" style="overflow:hidden;">
+   	     
+	   <DIV  class="container"> 
+	     <DIV class="row vertical-align" style="margin-left:40px;" >
+		    <DIV class="col-xs-offset-1 col-xs-7 largeRed text-right">מערכת לנהג פינויים</DIV>
+	        <DIV class="col-xs-offset-0 col-xs-2 xxLargeRed">"ביזנס"</DIV>
+	   	 </DIV>
+		 <DIV class="row" >
+		   <DIV style="width:32px;" id="tdSync" class="col-xs-offset-1 col-xs-1 brdr" ><div style="visibility:hidden;">שלח</div></DIV>
+		   <DIV style="width:31px;" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV style="width:31px;" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV style="width:31px;" class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV style="width:31px;" class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV style="width:31px;" class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV style="width:32px;" class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV style="width:32px;" class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV style="width:32px;" id="tdNumInvs" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV style="width:32px;" id="tdOnline" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		 </DIV>
+		 <DIV class="row header">
+		    <DIV class="col-xs-offset-3 col-xs-6 text-center">סידור עבודה יומי</DIV>
+	     </DIV>
+		 <DIV class="row">
+		    <DIV class="col-xs-offset-1 col-xs-10 text-center" id="ttlDiv" ></DIV>
+	     </DIV>
+		 <DIV class="row buttons-header row-no-padding">
+		    <div class="col-xs-offset-1 col-xs-2 text-center"  ><button style="width:50px;" class="btn-default btnHeader" onclick="window.location='driversMenu.html'" >יציאה</button></div>
+	        <div class="col-xs-3 text-center " ><button class="btn-default  btnHeader" style="width:80px;" onclick="SyncInvContentPhoneWithServer();NavToExecRep()" >ד. ביצוע</button></div>
+	        <div class="col-xs-3 text-center " ><button class="btn-default  btnHeader" style="width:80px;" onclick="SyncInvContentPhoneWithServer();NavToExecRep(true)">אי ביצוע</button></div>
+	        <div class="col-xs-3 text-center " ><button class="btn-default  btnHeader" style="width:75px;" onclick="OpenWaze()" >ניווט</button></div>
+	     </DIV>
+		 
+		   <Div style="position:relative;top:-10px;">
+		   <DIV class="row header-row"> 
+	         <DIV class="col-xs-offset-1 col-xs-4 text-center blackOnLightBlue brdr" >לקוח</DIV>
+	         <DIV class="col-xs-4 text-center blackOnLightBlue brdr" >אתר</DIV>
+	         <DIV class="col-xs-3 text-center blackOnLightBlue brdr" style='width:75px;' >.הזמ</DIV>
+	       </DIV>
+	   	   <DIV class="dtlsTbl" ></DIV>
+	       </Div>
+	   </DIV>
+	   <section class="contactSection" style="margin-left:10px;" >
+	     <div class="row">
+	 	   <div class="col-xs-offset-1 col-xs-4 contactMan" >
+		     <button class="font-smaller blackOnOrange" style="width:95%;background-color:orange;">אנשי קשר</button>
+		   </div>
+		   <div id="contactName" class="col-xs-4 text-right contactMan"></div>
+		   <div style="width:60px;" class="col-xs-2 text-right contactMan">:שם</div>
+		 </div> 
+	     <div class="row">
+	       <div class="col-xs-offset-1 col-xs-4 contactMan">
+		     <button class="font-smaller blackOnOrange" style="width:95%;background-color:orange;" onclick="Dial(document.getElementById('contactPhone'));">חייג</button>
+		   </div>
+		   <div id="contactPhone" class="col-xs-4 text-right contactMan"></div>
+		   <div style="width:60px;" class="col-xs-2 text-right contactMan">:משרד</div> 
+		 </div>
+	     <div class="row">
+	       <div class="col-xs-offset-1 col-xs-4 contactMan">
+		     <button class="font-smaller blackOnOrange" style="width:95%;background-color:orange;" onclick="Dial(document.getElementById('contactMobile'));">חייג</button>
+		   </div>
+		   <div id="contactMobile" class="col-xs-4 text-right contactMan"></div>
+		   <div style="width:60px;" class="col-xs-2 text-right contactMan">:נייד</div>
+		 </div>
+	   </section>
+	 
+    	<script type="text/javascript" src="../cordova.js"></script>
+        <script type="text/javascript" src="../js/index.js"></script>
+	
+	</body>
+</html>

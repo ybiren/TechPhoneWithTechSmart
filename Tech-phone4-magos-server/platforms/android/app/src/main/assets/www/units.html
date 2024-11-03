@@ -1,0 +1,537 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+        <link rel="stylesheet" href="css/autoComplete.css">
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="globalfuncs.js"></script>s
+		<script type="text/javascript">
+		
+		var g_CallCode = "";
+		var g_CallStatus = "";
+		var g_unitCount = 0;
+		var g_UnitCode = 0;
+		var g_handlingCount = 0;
+		
+		
+		
+		var g_UnitTemplate = "<TR code='[[txtCode]]' isInsertedByUser='[[isInsertedByUser]]' style='background-color:transparent' onclick='SelectUnit(this);' >" +  
+		    "<TD width=20 align='right' style='border: 1px solid black;'><span id='[[txtIsUnitDone]]' class='tdContentSmall'>&nbsp;</span></TD>" +
+			"<TD width=210 align='right' style='border: 1px solid black;'><TABLE style='width:100%' ><TR><TD width=70 align='right'><SPAN style='width:70px' id='[[txtRoom]]' class='tdContentSmall'></SPAN></TD><TD width=70 align='right'><SPAN style='width:70px' id='[[txtFloor]]' class='tdContentSmall'></SPAN></TD><TD width=70 align='right'><SPAN style='width:70px' id='[[txtBuilding]]' class='tdContentSmall'></SPAN></TD></TR></TABLE></TD>" +
+			"<TD  width=105 align='right' style='border: 1px solid black;'><SPAN dir='rtl' id='[[txtDesc]]' class='tdContentSmall'></SPAN></TD>" + 
+ 		    "<TD width=20 align='right' style='border: 1px solid black;'><SPAN class='tdContentSmall'>[[ind]]</SPAN></TD>" +
+			"</TR>";
+				
+		
+		
+		var g_HandlingTemplate = "<TR handlingCode='[[txtHandlingCode]]'>" +  
+		    "<TD width=20 style='border: 1px solid black;'><input type='checkbox' id='[[chkIsDone]]' class='inputTxtWidth100Per' onclick='UpdIsUnitDone([[ind]]);' ></TD>" +
+			"<TD width=305 align='right' style='border: 1px solid black;'><SPAN id='[[txtHandlingDesc]]' class='tdContentSmall'></SPAN></TD>" + 
+			"<TD width=20 align='right' style='border: 1px solid black;'><SPAN class='tdContentSmall'>[[indForShow]]</SPAN></TD>" +
+			"</TR>";
+		
+		
+		 var g_partsArr = [];
+		 var g_CodeArr = [];	
+		 var g_barcodeArr = [];
+         
+		 var g_CurrentPartInd = "";
+		/********************************************************************/
+		function AddHdr() {
+			
+			var hdrTmplt = "<TR class='smallFontRowHeader'>" +  
+		    "<TD align='center' width=20>בוצע</TD>" +
+			"<TD align='center' width=210><TABLE style='width:100%' border=1><TR><TD align='center' width=70>חדר</TD><TD align='center' width=70>קומה</TD><TD align='center' width=70>בניין</TD></TR></TABLE></TD>" +
+			"<TD align='center' width=105>שם היחידה</TD>" + 
+ 			"<TD align='center' width=20>#</TD>" +
+			"</TR>";
+		
+		  /*		
+		  var tbl = document.createElement('table');
+          tbl.cellspacing="0";
+		  tbl.cellpadding="0";
+		  tbl.style.margin = "0 auto";
+		  tbl.innerHTML = hdrTmplt;
+		  */
+		  var tr = document.createElement('tr');
+          document.getElementById("tblUnits").appendChild(tr);
+		  tr.outerHTML = hdrTmplt;
+				
+		}
+				
+		
+		/********************************************************************/
+		function AddRow(unitCode,isInsertedByUser){
+	    	  
+		  var tr = document.createElement('tr');
+		  document.getElementById("tblUnits").appendChild(tr);
+		  outHTML =  g_UnitTemplate;
+		  
+		  outHTML = outHTML.replace("[[txtIsUnitDone]]", "txtIsUnitDone"  + g_unitCount);
+		  outHTML = outHTML.replace("[[txtDesc]]", "txtDesc"  + g_unitCount);
+		  outHTML = outHTML.replace("[[txtBuilding]]", "txtBuilding" + g_unitCount);
+          outHTML = outHTML.replace("[[txtFloor]]", "txtFloor" + g_unitCount);
+          outHTML = outHTML.replace("[[txtRoom]]", "txtRoom" + g_unitCount);
+          outHTML = outHTML.replace("[[ind]]",  g_unitCount == 0 ? "0" : unitCode);
+        		
+		  outHTML = outHTML.replace("[[txtCode]]",unitCode);
+		  if(unitCode == g_UnitCode)
+		    outHTML = outHTML.replace("transparent","#00ff00");
+		  if(isInsertedByUser===undefined)
+            outHTML = outHTML.replace("[[isInsertedByUser]]","0");
+		  else 
+		    outHTML = outHTML.replace("[[isInsertedByUser]]","1");
+          tr.outerHTML = outHTML;
+		  g_unitCount++; 
+	   		  		
+		}
+			
+		/********************************************************************/
+		function ShowAddUnitByUserModal(){
+		
+		  document.getElementById("insUnitDialog").showModal();
+		    
+		  function BuildUnitTypes(unitTypesInnerHTML,item){
+
+			if(item.txt!==undefined)
+			  unitTypesInnerHTML += `<option value=${item.code}>${item.txt}` + "\n";
+			return  unitTypesInnerHTML;
+		  }
+		  
+		  var unitTypes = GetData("op=getUnitTypes"); 
+		  if(document.querySelector("#selInsUnitType").children.length==0){
+		    var unitTypesInnerHTML = unitTypes.reduce(BuildUnitTypes,"");
+		    document.querySelector("#selInsUnitType").innerHTML = unitTypesInnerHTML; 
+		  }
+          document.querySelector("#selInsUnitType").selectedIndex = -1;
+		 
+		}
+		
+		/********************************************************************/
+		function GetMaxUnitCode(unitsDataJson){
+		  var maxUnitCode = 0;
+		  for(var i=0;i<unitsDataJson.length;i++){
+            if(unitsDataJson[i] && typeof(unitsDataJson[i].unitCode)!="undefined" && parseInt(Math.abs(unitsDataJson[i].unitCode)) > parseInt(maxUnitCode)){
+              maxUnitCode = Math.abs(unitsDataJson[i].unitCode);   
+			}			
+		  }		  
+		  return parseInt(maxUnitCode);
+		}
+		
+		/********************************************************************/
+		function AddUnitByUser(){
+		
+		 itm = "op=getCallRep&callCode=" + g_CallCode;
+		 var json = JSON.parse(window.localStorage.getItem(itm));
+		 var insertedUnitCode = -1;
+		 var selInsUnitType = document.forms[0].selInsUnitType;
+		 if(selInsUnitType.selectedIndex == -1)	{
+		   alert("יש לבחור סוג יחידה");
+		   return false;
+		 }
+		 for(var i=0;i<json.length;i++){
+		   if(json[i] && typeof(json[i].unitsData)!="undefined"){
+	        var unitsDataJson = JSON.parse(json[i].unitsData);
+            insertedUnitCode = -GetMaxUnitCode(unitsDataJson)-1;
+			unitsDataJson.push({"unitCode": insertedUnitCode,
+			                     "unitDesc": (document.forms[0].txtInsUnitDesc.value ? document.forms[0].txtInsUnitDesc.value : selInsUnitType.children[selInsUnitType.selectedIndex].innerHTML),
+								 "unitType":selInsUnitType.children[selInsUnitType.selectedIndex].value,
+								 "floor":document.forms[0].txtInsFloor.value,
+								 "building":document.forms[0].txtInsBuilding.value,
+								 "room":document.forms[0].txtInsRoom.value,
+								 "manufacturer":document.forms[0].txtInsManufacturer.value,
+								 "model":document.forms[0].txtInsModel.value,
+								 "outputTon":document.forms[0].txtInsOutputTon.value,
+								 "remarks":document.forms[0].txtInsRemarks.value,
+								 "creationYear": (document.forms[0].txtCreationYear.value ? document.forms[0].txtCreationYear.value : 0),
+								 "serialNum":document.forms[0].txtSerialNum.value,
+								 "isInsertedByUser":"1"
+							  }); 
+	         
+			json[i].unitsData = JSON.stringify(unitsDataJson);
+	       }
+         }  
+		 for(var i=0;i<json.length;i++){
+		   
+		   if(json[i] && typeof(json[i].repData)!="undefined"){ 
+		     
+			 repDataJson = JSON.parse(json[i].repData);
+		     repDataJson.push({
+		       "unitCode": insertedUnitCode,  
+               "isEnded":"0",
+			   "dtCallConfirm":"0",
+			   "dtStartRide" : "0",
+			   "dtStartWork" : "0",
+			   "dtEndWork" : "0",
+			   "summary":null,
+			   "recommendation":null,
+			   "numImages":"0",
+			   "reqInd":"-1"
+			 });
+		     json[i].repData = JSON.stringify(repDataJson);
+		     console.log(json[i].repData);
+		   }
+		 }
+         		 
+		 window.localStorage.setItem(itm,JSON.stringify(json));
+	     BuildUnitsTable();
+
+	   }
+	
+		/********************************************************************/
+		function AddHandlingHdr() {
+		
+			var hdrTmplt = "<TR class='smallFontRowHeader'>" +  
+		    "<TD align='center' width=20>בוצע</TD>" +
+			"<TD align='center' width=305>תיאור העבודה</TD>" + 
+			"<TD align='center' width=20>#</TD>" +
+			"</TR>";
+		
+		    var tr = document.createElement('tr');
+            document.getElementById("tblUnitsHandling").appendChild(tr);
+			tr.outerHTML = hdrTmplt;
+					
+		}
+		
+	   	/********************************************************************/
+		function AddHandlingRow(handlingCode,rowCounter){
+	    	  
+		  var tr = document.createElement('tr');
+		  
+		  outerHTML = g_HandlingTemplate;
+		  outerHTML = outerHTML.replaceAll("[[chkIsDone]]", "chkIsDone"  + g_handlingCount);
+		  //outerHTML = outerHTML.replaceAll("[[txtHandlingRemarks]]", "txtHandlingRemarks"  + g_handlingCount);
+		  outerHTML = outerHTML.replaceAll("[[txtHandlingDesc]]", "txtHandlingDesc"  + g_handlingCount);
+		  outerHTML = outerHTML.replaceAll("[[txtHandlingCode]]", handlingCode);
+		  outerHTML = outerHTML.replaceAll("[[ind]]",  rowCounter);
+		  outerHTML = outerHTML.replaceAll("[[indForShow]]",  rowCounter+1);
+		  
+		  document.getElementById("tblUnitsHandling").appendChild(tr);
+   		  tr.outerHTML = outerHTML;
+		  g_handlingCount++; 
+	  		  		
+		}
+		
+		/********************************************************************/
+		function UpdIsUnitDone(currInd){
+		  if(currInd!=-1){
+		     isJobDone = 0;
+			 
+			 var handlingTR = document.getElementById("chkIsDone" + currInd).parentNode.parentNode;
+			 if(document.getElementById("chkIsDone" + currInd).checked)
+		       isJobDone = 1;
+			 SaveQueryOffline("op=updUnitHandling&callCode=" + g_CallCode + "&unitCode=" + g_UnitCode + "&handlingCode=" + handlingTR.getAttribute("handlingCode") + "&isJobDone=" + isJobDone,null);
+	       }
+		  
+		  var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+		  var unitHandlingDataJson = {};
+		  
+		  for(i=0;i<json.length;i++){
+		    if(json[i] && typeof(json[i].unitHandlingData)!="undefined")
+			  unitHandlingDataJson = JSON.parse(json[i].unitHandlingData);
+          }     
+		 		 
+		  for(i=0;i<g_unitCount;i++){
+			var currTR = document.getElementById("txtDesc" + i).parentNode.parentNode;
+		  	unitCode = currTR.getAttribute("code");
+			isUnitDone = true;
+			if(unitCode<=0)
+			  isUnitDone = false;
+			var unitHasHandlings = false;
+			for(j=0;j<unitHandlingDataJson.length;j++){  
+			  if (unitHandlingDataJson[j] && unitHandlingDataJson[j].unitCode == unitCode) {
+          	    unitHasHandlings = true;
+				if(unitHandlingDataJson[j].isDone == false)
+			      isUnitDone = false; 
+			  }     	
+			}
+			document.getElementById("txtIsUnitDone" + i).innerHTML = (isUnitDone && unitHasHandlings) ? "כן" : "&nbsp;"; 
+		  }
+	  	
+		}
+		
+		/********************************************************************/
+		function DelRowInsertedByUser(){
+		
+		  if (confirm('אתה בטוח?')) {
+		   itm = "op=getCallRep&callCode=" + g_CallCode;
+		   var json = JSON.parse(window.localStorage.getItem(itm));
+		   for(i=0;i<json.length;i++){
+		     if(json[i] && typeof(json[i].unitsData)!="undefined"){
+	           unitsDataJson = JSON.parse(json[i].unitsData);
+               for(j=unitsDataJson.length-1;j>=0;j--){
+			     if(unitsDataJson[j].unitCode==g_UnitCode)
+			       unitsDataJson.splice(j,1); 
+			   }
+			   json[i].unitsData = JSON.stringify(unitsDataJson);
+			 } 
+			 
+	       }
+           window.localStorage.setItem(itm,JSON.stringify(json));
+	       document.getElementById("tblUnits").innerHTML = "";
+		   BuildUnitsTable();
+	  	 }
+          
+		  
+		  
+	   }
+	   
+				
+		
+		/********************************************************************/
+	   	function DoBarcodeScan(){	
+		  		  
+		  cordova.plugins.barcodeScanner.scan(
+            function (result) {
+              var founded = false;
+			  trArr = document.getElementsByTagName("TR");
+		      for(var i=0;i<trArr.length;i++){
+		        if(trArr[i].hasAttribute("code") && trArr[i].getAttribute("code")==result.text){
+		          founded = true;
+			      SelectUnit(trArr[i]);
+				}
+			  }
+			  if(founded == false){
+			    alert("ברקוד לא נמצא");
+			   }
+			  
+            }, 
+            function (error) {
+              alert("Scanning failed: " + error);
+            },
+            {
+              "preferFrontCamera" : false, // iOS and Android
+              "showFlipCameraButton" : true, // iOS and Android
+              "prompt" : "Place a barcode inside the scan area" // supported on Android only
+            }
+          );
+		}
+		
+				
+		
+		/********************************************************************/
+	   	function keyboardShowHandler(e){
+			//alert('Keyboard height is: ' + e.keyboardHeight);
+		}
+
+		/********************************************************************/
+	   	function keyboardHideHandler(e){
+			//alert('Goodnight, sweet prince');
+		}
+		
+		/********************************************************************/
+	   	function BuildUnitsTable(){
+		
+		  document.getElementById("tblUnits").innerHTML = "";
+		  g_unitCount = 0; 
+		   
+		  AddHdr();
+		  AddRow(0);
+		  document.getElementById("txtDesc" + (g_unitCount-1)).innerHTML = "דיווח כללי"; 	
+		  document.getElementById("txtFloor" + (g_unitCount-1)).innerHTML = "&nbsp;";
+		  document.getElementById("txtBuilding" + (g_unitCount-1)).innerHTML = "&nbsp;";
+		  document.getElementById("txtRoom" + (g_unitCount-1)).innerHTML = "&nbsp;";
+		  
+		  var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+		 	
+		  for (i = 0; i < json.length; i++) {
+			  //build unit table
+			  if(json[i] && typeof(json[i].unitsData)!="undefined"){
+				unitsDataJson = JSON.parse(json[i].unitsData);
+			    for(j=0;j<unitsDataJson.length;j++){  
+			      if (unitsDataJson[j] && typeof (unitsDataJson[j].unitCode) != "undefined") {
+          	  	    AddRow(unitsDataJson[j].unitCode,unitsDataJson[j].isInsertedByUser);
+			        document.getElementById("txtDesc" + (g_unitCount-1)).innerHTML = unitsDataJson[j].unitDesc; 	
+			        document.getElementById("txtFloor" + (g_unitCount-1)).innerHTML = unitsDataJson[j].floor;
+			        document.getElementById("txtBuilding" + (g_unitCount-1)).innerHTML = unitsDataJson[j].building;
+			        document.getElementById("txtRoom" + (g_unitCount-1)).innerHTML = unitsDataJson[j].room;
+			      }
+		        }
+			  }
+		  }
+		  UpdIsUnitDone(-1);
+		}
+		
+		/********************************************************************/
+	   	function BuildHandlingTable(){
+		  g_handlingCount=0;
+		  document.getElementById("tblUnitsHandling").innerHTML = "";
+		  var json = GetData("op=getCallRep&callCode=" + g_CallCode);
+		  rowCounter = 0;
+		  for (i = 0; i < json.length; i++) {
+			
+		  //build handling table
+			  if(json[i] && typeof(json[i].unitHandlingData)!="undefined"){
+				unitHandlingDataJson = JSON.parse(json[i].unitHandlingData);
+                var isHeaderAdded = false;			    
+			    for(j=0;j<unitHandlingDataJson.length;j++){  
+			   	  if (unitHandlingDataJson[j] && unitHandlingDataJson[j].unitCode == g_UnitCode) {
+          	  	 	if(!isHeaderAdded)
+					  AddHandlingHdr();
+					isHeaderAdded = true;
+					AddHandlingRow(unitHandlingDataJson[j].handlingCode,rowCounter);
+					rowCounter++;
+					//document.getElementById("txtHandlingCode" + (g_handlingCount-1)).innerHTML = unitHandlingDataJson[j].handlingCode; 	
+			        document.getElementById("txtHandlingDesc" + (g_handlingCount-1)).innerHTML = unitHandlingDataJson[j].handlingDesc; 	
+			        //document.getElementById("txtHandlingRemarks" + (g_handlingCount-1)).innerHTML = unitHandlingDataJson[j].remarks; 	
+			        document.getElementById("chkIsDone" + (g_handlingCount-1)).checked = (unitHandlingDataJson[j].isDone == "1" ? true : false); 	
+			      }
+		        }
+			  }
+		  }
+		
+		}
+		
+		/********************************************************************/
+	   	function body_onload() {
+          
+		  g_CallCode = GetUrlVars()["callCode"];
+		  if(typeof(GetUrlVars()["unitCode"])!="undefined")
+		    g_UnitCode = GetUrlVars()["unitCode"];
+		  
+		  g_CallStatus = GetCallFld(g_CallCode,0,"main","callStatus");
+		  document.getElementById("divCallCode").innerText = g_CallCode;
+		  document.getElementById("divCustName").innerText = GetCallFld(g_CallCode,0,"main","custName");
+				  
+		  window.addEventListener('native.keyboardshow', keyboardShowHandler);
+		  window.addEventListener('native.keyboardhide', keyboardHideHandler);
+  		  		  
+		  ShowRelaxUser('relaxUserDlg',true);
+		  setTimeout(function(){
+		 	UpdateHeader(g_CallCode);
+			
+			BuildUnitsTable();
+			
+            BuildHandlingTable();			
+			
+						
+			 
+			DisableUpdateForCallThatIsEnded(g_CallStatus);
+		  
+		    document.getElementById("delInsertedUnit").className = "redYellowButtonDisabled";
+			document.getElementById("delInsertedUnit").disabled = true;
+		    
+		 
+		 },200);	
+		
+		}
+	    
+		/********************************************************************/
+	   	function SelectUnit(trObj){
+		  
+		  trArr = document.getElementsByTagName("TR");
+		  for(var i=0;i<trArr.length;i++){
+		    if(trArr[i].hasAttribute("code") && trArr[i].getAttribute("code")==g_UnitCode){
+		      if(trObj!=trArr[i]){
+			    trOuterHTML =  trArr[i].outerHTML;
+			    trUpdatedOuterHTML = trOuterHTML.replace("#00ff00","transparent");
+		        document.getElementById("tblUnits").innerHTML = document.getElementById("tblUnits").innerHTML.replace(trOuterHTML,trUpdatedOuterHTML);
+		     }
+		   }
+		  }
+	 
+		  
+		  g_UnitCode = parseInt(trObj.getAttribute("code"));
+		  trOuterHTML =  trObj.outerHTML;
+		  trUpdatedOuterHTML = trOuterHTML.replace("transparent","#00ff00");
+		  document.getElementById("tblUnits").innerHTML = document.getElementById("tblUnits").innerHTML.replace(trOuterHTML,trUpdatedOuterHTML);
+		
+		  BuildHandlingTable();
+		  if(trObj.getAttribute("isInsertedByUser")=="0"){
+		 	document.getElementById("delInsertedUnit").className = "redYellowButtonDisabled";
+		    document.getElementById("delInsertedUnit").disabled = true;
+		  }
+		  else{
+			document.getElementById("delInsertedUnit").className = "redYellowButton";
+		    document.getElementById("delInsertedUnit").disabled = false;
+		  }
+		  
+		}
+			
+		/********************************************************************/
+		function UpdateAndExit(){
+		}
+
+		
+		</script>
+	</head>
+    <body onload="body_onload();" style="overflow:hidden;">
+   	
+		<DIV id="mainDiv" style="position:absolute;top:0%;width:100%;text-align:center;align:center;overflow-y:hidden">
+		<TABLE  style="margin: 0 auto">
+		  <TR><TD colspan=4><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		  <TR><TD colspan=4><script language="javascript">CreateHeader(true);</script></TD></TR>
+		  <TR><TD colspan=4 class="largeBlack">יחידות2</TD></TR>
+		</TABLE>
+		<TABLE dir="rtl" style="margin: 0 auto">
+		  <TR>
+			<!--<TD><BUTTON onclick="window.location='callDtls.html?callCode=' + g_CallCode;" class="redYellowButton">פרטים</BUTTON></TD>-->
+			<TD colspan=1 align="center"><BUTTON id="addRowSupParts" onclick="DoBarcodeScan();" class="redYellowButton">ברקוד</BUTTON></TD>
+	   	    <TD colspan=1 align="center"><BUTTON id="addRowSupParts" onclick="ShowAddUnitByUserModal();" class="redYellowButton">הוסף</BUTTON></TD>
+	   	    <TD colspan=1 align="center"><BUTTON id="updUnit" onclick="window.location = 'techSum.html' + '?callCode=' + g_CallCode + '&unitCode=' + g_UnitCode;" class="redYellowButton">עדכן</BUTTON></TD>
+	   	 	<TD colspan=1 align="center"><BUTTON id="delInsertedUnit" onclick="DelRowInsertedByUser();" class="redYellowButton">מחק</BUTTON></TD>
+	   	    <TD align="left"><BUTTON onclick="window.location='callActions.html?callCode=' + g_CallCode;" class="redYellowButton">יציאה</BUTTON></TD>
+		  </TR>
+		  <TR class="blackOnGray">
+		    <TD align="right"><SPAN id="divCallCode" class="blackOnGray"></SPAN></TD><TD align="right"  colspan=4><SPAN id="divCustName" class="blackOnGray"></SPAN></TD>
+		  </TR>  		
+		</TABLE> 						  
+	   </DIV>
+	   <DIV id="unitsDiv" style="position:absolute;top:180px;width:100%;height:230px;overflow-y:auto;"><TABLE id="tblUnits" style="margin:0 auto"; ></TABLE></DIV>
+	   <DIV id="handlingDIV" style="position:absolute;top:420px;width:100%;height:180px;"><TABLE id="tblUnitsHandling" style="margin:0 auto"; ></TABLE></DIV>
+	  <dialog id="insUnitDialog">
+	    <form method="dialog">
+        <section>
+          <menu>
+           <TABLE  dir="rtl" style="margin: 0 auto"  width="280">
+		   <TR><TD colspan=3 align="center" class="largeBlack">הוספת יחידה</TD></TR>
+	       </TABLE> 
+		 </menu>
+		  <TABLE  dir="rtl" cellpadding="0" cellspacing="0">
+	   	    <TR>
+			  <TD align="center" colspan=2>
+			   <button onclick="AddUnitByUser()" type="submit" class="redYellowButton">עדכן</button>
+			   <IMG src="img/spacer.gif" width=20>
+			   <button type="submit" class="redYellowButton">יציאה</button>
+    		  </TD>
+			</TR>
+			<tr><td><IMG src="img/spacer.gif" height=10></td></tr>
+			<tr><td align="center" class="smallFontRowBlackHeader">סוג</td><td><select id="selInsUnitType" name="selInsUnitType" class="inputTxtWidth100Per"></select></td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+            <tr><td align="center" class="smallFontRowBlackHeader">תיאור</td><td><input type="text" name="txtInsUnitDesc" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+            <tr><td align="center" class="smallFontRowBlackHeader">בניין</td><td><input type="text" name="txtInsBuilding" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr> 		  
+		    <tr><td align="center" class="smallFontRowBlackHeader">קומה</td><td><input type="text" name="txtInsFloor" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		    <tr><td align="center" class="smallFontRowBlackHeader">חדר</td><td><input type="text" name="txtInsRoom" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		    <tr><td align="center" class="smallFontRowBlackHeader">יצרן</td><td><input type="text" name="txtInsManufacturer" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		    <tr><td align="center" class="smallFontRowBlackHeader">דגם</td><td><input type="text" name="txtInsModel" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		    <tr><td align="center" class="smallFontRowBlackHeader">תפוקה</td><td><input type="text" name="txtInsOutputTon" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		    <tr><td align="center" class="smallFontRowBlackHeader">הערות</td><td><input type="text" name="txtInsRemarks" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+			<tr><td align="center" class="smallFontRowBlackHeader">שנת ייצור</td><td><input type="text" name="txtCreationYear" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+			<tr><td align="center" class="smallFontRowBlackHeader">מספר סיריאלי</td><td><input type="text" name="txtSerialNum" class="inputTxtWidth100Per"</td></tr>
+		    <tr><td><IMG src="img/spacer.gif" height=5></td></tr>
+		  </TABLE>
+		 </section>
+        </form>
+       </dialog>  
+   	
+    	<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+	
+	</body>
+</html>

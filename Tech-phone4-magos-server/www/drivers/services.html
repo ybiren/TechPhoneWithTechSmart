@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="../drivers/css/index3.css" />
+        <title>פינויים</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="driversGlobalfuncs.js"></script>s
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ 		<script type="text/javascript">
+				
+		/********************************************************************/
+	   	function body_onload() {
+     	 
+		  var selInvNum = window.sessionStorage.getItem('selInvNum');
+		  if(selInvNum!==null && selInvNum!==undefined){
+		    document.querySelector("#txtInvNum").value = selInvNum;
+		  }
+		  
+		}
+			
+		/********************************************************************/
+	  	function UpdateAndExit(){
+			    
+		    ShowRelaxUser('relaxUserDlg',true);
+			setTimeout(function(){	
+			  var invNum = document.querySelector('#txtInvNum').value;
+			  var json = GetData("op=invByNum&invNum=" + invNum);
+		      if(json && json[0] && json[0].invNum){ 
+			    var qryStr = `op=updInvStatus&invNum=${invNum}&invStatus=${CALL_ACTIVE}&syncToServer=1`;		  
+		        UpdData(qryStr , false, "driversMenu.html");
+		      }
+		      else{
+			   alert("הזמנה לא קיימת");
+			   HideRelaxUser('relaxUserDlg');
+			  }  
+			  
+			
+			 },200)
+		
+		}
+    		
+		</script>
+	</head>
+    <body id="bdy" onload="body_onload();" style="overflow:hidden;">
+      
+	   <DIV  class="container"> 
+	     <DIV class="row vertical-align" style="margin-left:5px;"> 
+		    <DIV class="col-xs-offset-1 col-xs-6 largeRed text-right">מערכת לנהג פינויים</DIV>
+	        <DIV class="col-xs-offset-1 col-xs-2 xxLargeRed">"ביזנס"</DIV>
+	   	 </DIV>
+		 <DIV class="row header">
+		    <DIV class="col-xs-offset-3 col-xs-6 text-center">בטול סיום הזמנה</DIV>
+	     </DIV>
+		 <DIV class="row buttons-header" style="margin-top:20px">
+		    <div class="col-xs-offset-2 col-xs-5 text-center"><button style="width:250px;" class="btn-default  btnHeader" onclick="window.location='driversMenu.html'">יציאה</button></div>
+	     </DIV>
+		 <DIV class="row buttons-footer"> 
+	       <DIV style="height:30px;" class="col-xs-offset-1 col-xs-10 text-center blackOnLightBlue smaller-font brdr" >הזמנה</DIV>
+	     </DIV> 
+	     <DIV class="row">
+		   <INPUT id="txtInvNum" type="text" class="col-xs-offset-1 col-xs-10 text-center smaller-font brdr" />
+	     </DIV> 
+	     <DIV class="row buttons-header" style="margin-top:20px">
+		    <div class="col-xs-offset-2 col-xs-5 text-center"><button style="width:250px;" class="btn-default  btnHeader" onclick="UpdateAndExit()">בצע בטול סיום הזמנה</button></div>
+	     </DIV>
+	   </DIV>
+       	   	
+		<script type="text/javascript" src="../cordova.js"></script>
+        <script type="text/javascript" src="../js/index.js"></script>
+	
+	</body>
+</html>

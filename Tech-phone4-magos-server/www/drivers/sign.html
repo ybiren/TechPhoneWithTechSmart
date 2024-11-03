@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="../drivers/css/index3.css" />
+        <title>פינויים</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="../jSignature-min.js"></script>
+		<script type="text/javascript" src="driversGlobalfuncs.js"></script>
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ 		<script type="text/javascript">
+					
+		var g_signPicFileName = "";
+		
+		/********************************************************************/
+	   	function body_onload() {
+     	 
+		 ShowRelaxUser('relaxUserDlg',true);
+	     setTimeout(function(){			
+			  UpdateHeader(GetUrlVars()["invNum"]);	
+		   	  json = GetData("op=invByNum&invNum=" + GetUrlVars()["invNum"]);
+			  document.querySelector("#txtSignerName").value = json[0].signerName;
+			  document.querySelector("#txtSignerRole").value = json[0].signerRole;
+			  document.querySelector("#txtSignEmail").value = json[0].signEmail;
+			  document.querySelector("#txtSignRemarks").value = json[0].signRemarks;
+			  document.querySelector("#tdNumInvs").innerHTML = GetNumInvsForSelDate();
+		 	  //document.querySelector("#tdNumActiveInvs").innerHTML = GetNumActiveInvsForSelDate();
+		 	  g_signPicFileName = json[0].signPic; 
+			  
+			  if(g_signPicFileName!==null && g_signPicFileName.length > 0){	
+				  var img = new Image;
+				  img.onload = function(){
+					var context = signature.getSignatureCanvas('sign').getContext('2d');
+					context.drawImage(img,0,0); 
+				 };
+				 img.src = g_signPicFileName;
+			  } 
+		   },200);
+		 }
+		/********************************************************************/
+	  	function IsEmptySignature(){
+		  return  ((g_signPicFileName===null || g_signPicFileName.length==0)  && signature.isEmptySignature("sign")); 
+		}
+		/********************************************************************/
+	  	function UpdateAndExit(targetWin){
+	      var invNum = GetUrlVars()["invNum"];
+		  var signPic = ""; 
+		  if (!IsEmptySignature()){
+			signPic = signature.getSignatureCanvas('sign').toDataURL('image/png', 1.0);
+		  }
+		  
+		  UpdData("op=updInvSign&signerName=" + document.getElementById("txtSignerName").value + "&signerRole=" + document.getElementById("txtSignerRole").value + "&signEmail=" +  document.getElementById("txtSignEmail").value + "&signPic=" + signPic + "&signRemarks=" + document.getElementById("txtSignRemarks").value + "&invNum=" + invNum , false, targetWin!==undefined ? "execRep.html?invNum=" + invNum : null);
+		}	
+		</script>
+	</head>
+    <body id="bdy" onload="body_onload();" style="overflow:hidden;">
+   	 
+    
+	   <DIV  class="container"> 
+	     
+		 <DIV class="row vertical-align" style="margin-left:5px;">
+		    <DIV class="col-xs-offset-1 col-xs-6 largeRed text-right">מערכת לנהג פינויים</DIV>
+	        <DIV class="col-xs-offset-1 col-xs-2 xxLargeRed">"ביזנס"</DIV>
+	   	 </DIV>
+		 <DIV class="row">
+		   <DIV id="tdSync" class="col-xs-offset-1 col-xs-2 brdr text-center" onclick="UpdateAndExit();SyncOfflineQueriesToServer(GetUrlVars()['invNum'],null,false);">שלח</DIV>
+		   <DIV class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		   <DIV id="tdNumInvs" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   <DIV id="tdOnline" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		 </DIV>
+		 <DIV class="row header">
+		    <DIV class="col-xs-offset-3 col-xs-6 text-center">חתימה</DIV>
+	     </DIV>
+		 <DIV class="row buttons-header">
+		    <div class="col-xs-offset-1 col-xs-3"><button class="btn-default  btnHeader" onclick="UpdateAndExit(1)">יציאה</button></div>
+	        <div class="col-xs-offset-3 col-xs-4"><button class="btn-default  btnHeader" >דוח ביצוע</button></div>
+	    </DIV>
+		  <DIV class="row"> 
+	        <DIV class="col-xs-offset-1 col-xs-10 text-center blackOnLightBlue brdr" >שם החותם</DIV>
+	     </DIV>
+		 <DIV class="row"> 
+	       <INPUT id="txtSignerName" type="text" class="col-xs-offset-1 col-xs-10  brdr text-right" />
+	     </DIV> 
+	     <DIV class="row"> 
+	        <DIV class="col-xs-offset-1 col-xs-10  text-center blackOnLightBlue brdr" >תפקיד החותם</DIV>
+	     </DIV>
+		 <DIV class="row"> 
+	       <INPUT id="txtSignerRole" type="text" class="col-xs-offset-1 col-xs-10  brdr text-right" />
+	     </DIV>
+	     <DIV class="row"> 
+	        <DIV class="col-xs-offset-1 col-xs-10  text-center blackOnLightBlue brdr" >מייל לקבלת דו"ח הביצוע</DIV>
+	     </DIV>
+		 <DIV class="row"> 
+	       <INPUT id="txtSignEmail" type="text" class="col-xs-offset-1 col-xs-10 text-right brdr" />
+	     </DIV>
+		 <DIV class="row"> 
+	        <DIV class="col-xs-offset-1 col-xs-10  text-center blackOnLightBlue brdr" >הערות,חובה כאשר אין חתימה</DIV>
+	     </DIV>
+		 <DIV class="row"> 
+	       <INPUT id="txtSignRemarks" type="text" class="col-xs-offset-1 col-xs-10 text-right brdr" />
+	     </DIV>
+		 <DIV class="row buttons-footer">
+		    <div class="col-xs-offset-4 col-xs-3"><button class="btn-default btnHeader" onclick="signDialog.showModal();">חתימה</button></div>
+	    </DIV>
+	   </DIV>
+       	
+		<DIALOG id="signDialog">
+   	    <FORM  method="dialog">
+		  <section>
+           <table>
+		   <tr><td align="center">
+		   <button onclick="signDialog.close();" class="btn-default btnHeader">יציאה</button>
+           </td></tr>		  
+		  <tr><td>
+		  <INPUT type="signature"  name="sign" data-background="yellow" data-pen="black" data-penWidth="3" data-width="310" data-height="180">
+		  </td></tr>
+		  <tr><td align="center">
+		  <INPUT type="button" id="btnClearSign" class="btn-default btnHeader" onclick="signature.getSignatureCanvas('sign').clear();" value="נקה">
+		  </td></tr></table>
+		  </SECTION>  
+		</FORM>
+	  </DIALOG>
+		
+		<script type="text/javascript" src="../cordova.js"></script>
+        <script type="text/javascript" src="../js/index.js"></script>
+	
+	</body>
+</html>

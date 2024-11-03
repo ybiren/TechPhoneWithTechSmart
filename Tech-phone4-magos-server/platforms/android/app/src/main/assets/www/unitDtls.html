@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+		<title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+	    
+		var g_CallCode = "";
+		var g_UnitCode = "";
+				
+		function BuildUnitTypes(unitTypesInnerHTML,item){
+
+			if(item.txt!==undefined)
+			  unitTypesInnerHTML += `<option value=${item.code}>${item.txt}` + "\n";
+			return  unitTypesInnerHTML;
+		}
+				
+		function body_onload(){
+	      g_CallCode = GetUrlVars()["callCode"];
+		  g_UnitCode = GetUrlVars()["unitCode"];
+		  g_TargetWin = GetUrlVars()["targetWin"];
+						  
+		  
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    document.getElementById("txtUnitDesc").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","unitDesc"); 
+            document.getElementById("txtBuilding").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","building"); 
+		    document.getElementById("txtFloor").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","floor"); 
+		    document.getElementById("txtRoom").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","room"); 
+		    document.getElementById("txtManufacturer").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","manufacturer"); 
+		    document.getElementById("txtModel").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","model"); 
+		    document.getElementById("txtOutputTon").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","outputTon"); 
+		    document.getElementById("txtRemarks").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","remarks"); 
+		    document.getElementById("txtCreationYear").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","creationYear"); 
+		    document.getElementById("txtSerialNum").value = GetCallFld(g_CallCode,g_UnitCode,"unitsData","serialNum"); 
+		    var unitType = GetCallFld(g_CallCode,g_UnitCode,"unitsData","unitType");
+		 	var unitTypes = GetData("op=getUnitTypes"); 
+		    var unitTypesInnerHTML = unitTypes.reduce(BuildUnitTypes,"");
+		    var selUnitType = document.querySelector("#selUnitType");
+		    selUnitType.innerHTML = unitTypesInnerHTML; 	  
+		    for(var i=0;i<selUnitType.options.length;i++){
+			  if(selUnitType.options[i].value == unitType)
+			    selUnitType.selectedIndex = i;
+			}
+			
+		  },200);
+		}
+		
+		function UpdateAndExit(){
+		  
+		 ShowRelaxUser('relaxUserDlg');
+		 setTimeout(function(){
+		  
+		   itm = "op=getCallRep&callCode=" + g_CallCode;
+		   var json = JSON.parse(window.localStorage.getItem(itm));
+		   for(var i=0;i<json.length;i++){
+		     if(typeof(json[i].unitsData)!="undefined"){
+	          var unitsDataJson = JSON.parse(json[i].unitsData);
+              for(var j=0;j<unitsDataJson.length;j++){
+			    if(unitsDataJson[j].unitCode!==undefined && unitsDataJson[j].unitCode==g_UnitCode){
+			      unitsDataJson[j].unitType = document.getElementById("selUnitType").children[document.getElementById("selUnitType").selectedIndex].value;
+			      unitsDataJson[j].unitDesc = document.getElementById("txtUnitDesc").value;
+			      unitsDataJson[j].building = document.getElementById("txtBuilding").value; 
+			      unitsDataJson[j].floor = document.getElementById("txtFloor").value; 
+			      unitsDataJson[j].room = document.getElementById("txtRoom").value;
+			      unitsDataJson[j].manufacturer = document.getElementById("txtManufacturer").value;
+			      unitsDataJson[j].model = document.getElementById("txtModel").value;
+			      unitsDataJson[j].outputTon = document.getElementById("txtOutputTon").value;
+			      unitsDataJson[j].remarks = document.getElementById("txtRemarks").value;
+			      unitsDataJson[j].creationYear = document.getElementById("txtCreationYear").value;
+			      unitsDataJson[j].serialNum = document.getElementById("txtSerialNum").value; 
+			    }
+			    json[i].unitsData = JSON.stringify(unitsDataJson);
+			  }
+			
+	         }
+           }
+		   window.localStorage.setItem(itm,JSON.stringify(json)); 
+		   window.location = g_TargetWin + '?callCode=' + g_CallCode + "&unitCode=" + g_UnitCode; 
+		  },200);
+		}
+	    
+		 
+		</script>
+    </head>
+    <body onload="body_onload();">
+        <DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE  dir="rtl" cellpadding="0" cellspacing="0" style="margin: 0 auto">
+		<TR><TD colspan=2><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="largeRed">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD colspan=2 class="largeBlack" >פרטי יחידה</TD></TR>
+		  <TR><TD colspan=2><IMG src="img/spacer.gif" height=2></TD></TR>
+		  <TR>
+		    <TD colspan=2>
+			  <SPAN style="float:right"><BUTTON class="redYellowButton" onclick="window.location='invParts.html?callCode=' + g_CallCode">חלקים שהוזמנו</BUTTON></SPAN>
+			  <SPAN style="float:left"><BUTTON class="redYellowButton" onclick="UpdateAndExit();">יציאה</BUTTON></SPAN>
+			</TD> 
+			<!--
+			<TD align="right"><BUTTON class="redYellowButton" onclick="window.location='invParts.html?callCode=' + g_CallCode + '&custName=' + document.getElementById('tdCustName').innerText">חלקים שהוזמנו</BUTTON></TD>
+		    <TD  align="left"><BUTTON class="redYellowButton" onclick="UpdateAndExit();">יציאה</BUTTON></TD>
+		    --> 
+		  </TR>
+	  	<TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+	     <TR class="callDtlsRowData">  
+		   <TD class="callDtlsRowHeader">סוג</TD>
+		   <TD><select id="selUnitType" class='inputTxtWidth100Per'></select></TD>
+		 </TR>
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR class="callDtlsRowData">  
+		   <TD class="callDtlsRowHeader">שם היחידה</TD>
+		   <TD><input id="txtUnitDesc" class='inputTxtWidth100Per'></TD>
+		 </TR>
+	    <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+	    <TR>  
+          <TD class="callDtlsRowHeader">בניין</TD>		  
+		  <TD><input id="txtBuilding" class='inputTxtWidth100Per'></TD>
+		</TR>
+	    <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">קומה</TD>
+		   <TD><input id="txtFloor" class='inputTxtWidth100Per'></TD>
+		 </TR>
+		<TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">חדר</TD>
+		   <TD><input id="txtRoom" class='inputTxtWidth100Per'></TD>
+		 </TR>
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">יצרן</TD>
+		   <TD><input id="txtManufacturer" class='inputTxtWidth100Per'></TD>
+		 </TR>
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">דגם</TD>
+		   <TD><input id="txtModel" class='inputTxtWidth100Per'></TD>
+		 </TR>
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">תפוקה</TD>
+		   <TD><input id="txtOutputTon" class='inputTxtWidth100Per'></TD>
+		 </TR>
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">הערות</TD>
+		   <TD><input id="txtRemarks" class='inputTxtWidth100Per'></TD>
+		 </TR> 
+		 <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		 <TR>  
+		   <TD class="callDtlsRowHeader">שנת יצור</TD>
+		   <TD><input id="txtCreationYear" class='inputTxtWidth100Per'></TD>
+		 </TR> 
+		  <TR><TD colspan=2><IMG src="img/spacer.gif" height=4></TD></TR>
+		  <TR>  
+		   <TD class="callDtlsRowHeader">מספר סיריאלי</TD>
+		   <TD><input id="txtSerialNum" class='inputTxtWidth100Per'></TD>
+		 </TR> 
+		</TABLE>
+	  </div>		
+		
+		
+		<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>

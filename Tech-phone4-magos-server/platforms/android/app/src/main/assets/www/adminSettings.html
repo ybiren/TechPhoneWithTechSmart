@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+		<title>טכנאיפון</title>
+        <script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="jSignature-min.js"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+		<script type="text/javascript">
+	    
+		
+		
+		var g_CallCode = "";
+		var aa = "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";		
+		
+		var g_usedLocalStorage = 0;
+	    var g_remainingLocalStorage = 0;
+		
+		//////////////////////////////////////////////////////////////////////////
+		function RemainingLocalStorage(){
+		  window.navigator.webkitTemporaryStorage.queryUsageAndQuota(function(used, remaining) {
+            document.getElementById("usedLocalStorage").innerHTML = JSON.stringify(localStorage).length;
+			document.getElementById("remainingLocalStorage").innerHTML = remaining;
+          }, function(err) {
+              alert(err);
+         });
+		}
+		
+		//////////////////////////////////////////////////////////////////////////
+		function NumCallsDownloadedToPhone(){
+		
+		  var numCallsDownloadedToPhone = 0;
+		  for(var key in localStorage) {
+            if(key.indexOf("op=getCallRep&callCode=")!=-1 && key.indexOf("_Time")==-1 ){
+		     numCallsDownloadedToPhone++;
+            }
+		  }
+		  document.getElementById("numCallsDownloadedToPhone").innerHTML = numCallsDownloadedToPhone;	
+		}
+		
+		//////////////////////////////////////////////////////////////////////////
+		function ClearLocalStorage(){
+		
+		  for(var key in localStorage) {
+  
+            //alert(key);
+		    localStorage.removeItem(key);
+
+          }
+		  RemainingLocalStorage();
+		  NumCallsDownloadedToPhone();	
+		}
+				
+		//////////////////////////////////////////////////////////////////////////
+		function body_onload(){
+	
+     	  RemainingLocalStorage();
+		  NumCallsDownloadedToPhone();
+		return;
+		
+		/*
+		document.getElementById("img1").src =  "data:image/jpeg;base64," + aa;
+		//UpdDataAsync("op=updCallRep&callCode=17110019"  + "&imgData=" + encodeURIComponent(aa) , false, "execRep.html");
+	    alert(22);
+		*/
+		if (!document.getElementById("relaxUserDlg")) {
+		  var oRelUser = document.createElement("div");
+		  document.body.appendChild(oRelUser)
+		  oRelUser.outerHTML = "<div id='relaxUserDlg' style='position:absolute;z-index:10001;visibility:hidden;background-color:transparent;width:100%;height:100%;'><IMG style='position:absolute;top:40%;left:35%;' src='img/relax.gif' width=100 height=100 ></div>";
+		}
+		ShowRelaxUser('relaxUserDlg');
+		var dat = GetData("op=getImage&callCode=17110019&ind=8");
+		alert(dat.imgData.length);		  
+		
+		document.getElementById("txt1").value = dat.imgData;
+		document.getElementById("img1").src =  "data:image/jpeg;base64," + dat.imgData;
+		
+		}
+		
+		
+		</script>
+	</head>
+    <body onload="body_onload();">
+        <center>
+		<table>
+		  <tr><td align="right"><div id="usedLocalStorage" class="largeBlack"></div></td><td align="right" class="largeBlack">:בשימוש</td></tr>
+		  <tr><td align="right"><div id="remainingLocalStorage" class="largeBlack"></div></td><td align="right" class="largeBlack">:הכל</td></tr>
+		  <tr><td align="right"><div id="numCallsDownloadedToPhone" class="largeBlack"></div></td><td align="right" class="largeBlack">:מספר הקריאות שהורדו לטלפון</td></tr>	
+		</table>
+		<br>
+		<button onclick="ClearLocalStorage();" >נקה local storage</button>
+		</center>
+		<!--
+		<img id="img1" src="#">		
+	    
+		<input type="text" id="txt1">	
+		MMMM	
+        -->
+	
+	</body>
+</html>

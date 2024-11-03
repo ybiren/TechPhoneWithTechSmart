@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="../drivers/css/index3.css" />
+        <title>פינויים</title>
+		<script src="jquery.min.js" type="text/javascript"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script type="text/javascript" src="driversGlobalfuncs.js"></script>
+	    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+ 		<script type="text/javascript">
+		
+		var json;	
+			
+		
+		/********************************************************************/
+	   	function body_onload() {
+     			 
+		 ShowRelaxUser('relaxUserDlg',true);
+	     setTimeout(function(){			
+		   UpdateHeader(GetUrlVars()["invNum"]);	
+		   json = GetData("op=invByNum&invNum=" + GetUrlVars()["invNum"]);
+		   document.querySelector("#invNum").innerHTML = document.querySelector("#invNum").innerHTML.replace("[[invNum]]",json[0].invNum);
+	   	   document.querySelector("#customer").innerHTML = document.querySelector("#customer").innerHTML.replace("[[customer]]",json[0].custName);
+	   	   document.querySelector("#site").innerHTML = document.querySelector("#site").innerHTML.replace("[[site]]",json[0].siteName);
+	   	   document.querySelector("#address").innerHTML = document.querySelector("#address").innerHTML.replace("[[address]]",json[0].address);
+	 	   document.querySelector("#dischargeArea").innerHTML = document.querySelector("#dischargeArea").innerHTML.replace("[[dischargeArea]]",json[0].dischargeArea);
+		   
+		   document.querySelector("#contactName").innerHTML = document.querySelector("#contactName").innerHTML.replace("[[contactName]]",json[0].contactName);
+	 	   document.querySelector("#contactPhone").innerHTML = document.querySelector("#contactPhone").innerHTML.replace("[[contactPhone]]",json[0].contactPhone);
+	 	   document.querySelector("#contactMobile").innerHTML = document.querySelector("#contactMobile").innerHTML.replace("[[contactMobile]]",json[0].contactMobile);
+		   document.querySelector("#txtRemarks").value = json[0].remarks;
+		   document.querySelector("#txtNumExecRep").value = json[0].numExecRep;
+		   document.querySelector("#txtQuantity").value = json[0].quantity;
+		   document.querySelector("#hdnInvStatus").value = json[0].invStatus;
+		   document.querySelector("#tdNumInvs").innerHTML = GetNumInvsForSelDate();
+		 
+		    if(GetUrlVars()["nonAccomplished"] == "1"){
+		      document.querySelector("#ttl").innerHTML = "דוח אי ביצוע";
+			  document.querySelector("#txtRemarks").value = "העבודה לא בוצעה";
+		      document.querySelector("#txtQuantity").value = 0;
+		    }
+		  },200)
+		
+		}
+		
+		/********************************************************************/
+		function onDialSuccess(result){
+			//alert("Success:"+result);
+		}
+
+		function onDialError(result) {
+			alert("Error:"+result);
+		}
+		
+		/********************************************************************/
+	    function Dial(that){ 	
+			var number = that.innerHTML.replace("-","");
+			window.plugins.CallNumber.callNumber(onDialSuccess, onDialError, number);
+		}
+		
+		/********************************************************************/
+	  	function NavToSign(){
+		  UpdateAndExit();
+		  window.location='sign.html?invNum=' + GetUrlVars()["invNum"];
+		}	
+		
+		/********************************************************************/
+	  	function NavToCamera(pg){
+		  UpdateAndExit();
+		  window.location='camera.html?invNum=' + GetUrlVars()["invNum"] + '&pg=' + pg;
+		}
+		
+		/********************************************************************/
+	  	function navToWeigeDtls(){
+		    UpdateAndExit();
+			window.location='weigeDtls.html?invNum=' + GetUrlVars()["invNum"];
+		}
+		
+		/********************************************************************/
+	  	function UpdateAndExit(targetWin,isEnded){
+		 		  
+		  var invNum = GetUrlVars()["invNum"];
+		  var remarks = document.querySelector("#txtRemarks").value;
+  		  var quantity = document.querySelector("#txtQuantity").value;
+          var numExecRep = document.querySelector("#txtNumExecRep").value;
+       	  var invStatus = document.querySelector("#hdnInvStatus").value;
+		  var qryStr = "op=updInvRemark&invNum=" + invNum +  "&remarks="  + remarks + "&quantity=" + quantity + "&numExecRep=" + numExecRep + "&invStatus=" + invStatus;		  
+		  if(isEnded!==undefined && isEnded===true)
+		    qryStr+="&syncToServer=1";
+		  
+		  UpdData(qryStr , false, targetWin!==undefined ? "invs.html":null);
+		  
+		}
+		
+		/********************************************************************/
+	  	function FinishInv(){
+		
+		  
+		  var quantity = document.querySelector("#txtQuantity").value;
+          var numExecRep = document.querySelector("#txtNumExecRep").value;
+       	  var weigeCertNum = json[0].weigeCertNum;
+		  var weight = json[0].weight;
+		   
+		 
+		  if(GetUrlVars()["nonAccomplished"] === undefined){
+			  if(numExecRep.trim() == "" || numExecRep.trim() == "0"){
+				alert("חובה להזין מספר דוח ביצוע");
+				return;
+			  }		  
+			  if(quantity.trim() == "" || quantity.trim() == "0"){
+				alert("חובה להזין כמות");
+				return;
+			  }
+			  if(json[0].numImages_erSnap == 0){
+				alert("דוח הביצוע לא צולם");
+				return;
+			  }
+			  
+			  if(json[0].invType == INV_MUST_HAVE_WEIGE){
+			  
+				 if(weigeCertNum === null || weigeCertNum.trim()=="" || weigeCertNum.trim()=="0"){
+				   alert("חובה לרשום תעודת שקילה");
+				   return;
+				 }
+				 if(weight === null || weight.trim()=="" || weight.trim()=="0"){
+				   alert("חובה לרשום משקל שקילה");
+				   return;
+				 }
+				 if(json[0].numImages_wgSnap == 0){
+				   alert("חובה לצלם את תעודת השקילה");
+				   return;
+				 }
+			  }
+			}	
+		  
+		  document.querySelector("#mainScreen").style.display = "none";
+		  document.querySelector("#finishMsg").style.display = "block";
+		 
+		  document.querySelector("#hdnInvStatus").value = CALL_ENDED;
+          
+		  UpdateAndExit();
+		  SyncOfflineQueriesToServer(GetUrlVars()['invNum'],null,false , ()=>{UpdateAndExit("invs.html",true);});
+		  //UpdateAndExit("invs.html",true);
+		  
+		  //SyncOfflineQueriesToServer(GetUrlVars()['invNum'],"invs.html",false);		  
+		   
+		}
+		
+		</script>
+	</head>
+    <body id="bdy" onload="body_onload();" style="overflow:hidden;">
+   	   
+	   <DIV  class="container" style="position:relative;top:-10px;"> 
+	     <DIV class="row  vertical-align" style="margin-left:5px;">
+			<DIV class="col-xs-offset-1 col-xs-6 largeRed text-right">מערכת לנהג פינויים</DIV>
+	        <DIV class="col-xs-offset-1 col-xs-2 xxLargeRed">"ביזנס"</DIV>
+	   	 </DIV>
+		 <div id="mainScreen">
+		   <DIV class="row">
+		     <DIV id="tdSync" class="col-xs-offset-2 col-xs-2 brdr text-center" onclick="UpdateAndExit();SyncOfflineQueriesToServer(GetUrlVars()['invNum'],null,false);">שלח</DIV>
+		     <DIV id="tdNumInvs" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		     <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		     <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		     <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		     <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		     <DIV class="col-xs-1 brdr">&nbsp</DIV>
+		     <DIV id="tdOnline" class="col-xs-1 brdr text-center">&nbsp</DIV>
+		   </DIV>
+		   <DIV class="row header">
+		     <DIV class="col-xs-offset-3 col-xs-6 text-center" id="ttl">דוח ביצוע</DIV>
+	       </DIV>
+		   <DIV class="row buttons-header">
+		     <div class="col-xs-offset-1 col-xs-2 text-center"><button style="width:50px;" class="btn-default  btnHeader" onclick="UpdateAndExit(1)">יציאה</button></div>
+	         <div class="col-xs-3  text-center"><button style="width:80px;" class="btn-default  btnHeader" onclick="NavToCamera('erPic')" >תמונה</button></div>
+	         <div class="col-xs-3  text-center"><button style="width:80px;" class="btn-default  btnHeader" onclick = "NavToSign();" >חתימה</button></div>
+	         <div class="col-xs-3  text-center"><button style="width:65px;" class="btn-default  btnHeader" onclick="FinishInv();" >סיום</button></div>
+	       </DIV>
+		   <DIV class="row "> 
+	         <DIV id="invNum" class="col-xs-offset-1 col-xs-6 text-right blackOnOrange brdr smaller-font" >[[invNum]]</DIV>
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr smaller-font" >הזמנה</DIV>
+	       </DIV>
+		   <DIV class="row"> 
+	         <DIV id="customer" class="col-xs-offset-1 col-xs-6 text-right blackOnOrange brdr smaller-font" >[[customer]]</DIV>
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr smaller-font" >לקוח</DIV>
+	       </DIV>
+	       <DIV class="row"> 
+	         <DIV id="site" class="col-xs-offset-1 col-xs-6 text-right blackOnOrange brdr smaller-font" >[[site]]</DIV>
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr smaller-font" >אתר</DIV>
+	       </DIV>
+	       <DIV class="row"> 
+	         <DIV id="address" class="col-xs-offset-1 col-xs-6 text-right blackOnOrange brdr smaller-font" >[[address]]</DIV>
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr smaller-font" >כתובת</DIV>
+	       </DIV>
+	       <DIV class="row"> 
+	         <DIV id="dischargeArea" class="col-xs-offset-1 col-xs-6 text-right blackOnOrange brdr smaller-font" >[[dischargeArea]]</DIV>
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr smaller-font" >א. פריקה</DIV>
+	       </DIV>
+		   <DIV class="row buttons-footer"> 
+	         <INPUT id="txtNumExecRep" type="text" class="col-xs-offset-1 col-xs-6 text-right brdr" />
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr" >מ. דוח בצוע</DIV>
+	       </DIV>
+		   <DIV class="row"> 
+	         <INPUT id="txtQuantity" type="text" class="col-xs-offset-1 col-xs-6 text-right brdr" />
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr" >כמות</DIV>
+	       </DIV> 
+	     
+	       <DIV class="row"> 
+	         <INPUT id="txtRemarks" type="text" class="col-xs-offset-1 col-xs-6 text-right brdr" />
+	         <DIV class="col-xs-4 text-right blackOnLightBlue brdr" >הערות</DIV>
+	       </DIV> 
+	       <DIV class="row buttons-footer">
+		     <div class="col-xs-offset-1  col-xs-4"><button class="btn-default  btnHeader" onclick="navToWeigeDtls()">פרטי שקילה</button></div>
+	      	 <div class="col-xs-offset-1  col-xs-5"><button class="btn-default  btnHeader" onclick="NavToCamera('erSnap')" >צלם דוח ביצוע</button></div>
+	       </DIV>
+	   
+	       <section class="contactSection" style="margin-left:5px;" >
+	         <div class="row">
+	 	       <div class="col-xs-offset-1 col-xs-4 contactMan" >
+		         <button class="font-smaller blackOnOrange" style="width:100%;background-color:orange;">אנשי קשר</button>
+		       </div>
+		       <div id="contactName" class="col-xs-4 text-right contactMan">[[contactName]]</div>
+		       <div class="col-xs-2 text-right contactMan">:שם</div>
+		     </div> 
+	         <div class="row">
+	           <div class="col-xs-offset-1 col-xs-4 contactMan">
+		         <button class="font-smaller blackOnOrange" style="width:100%;background-color:orange;" onclick="Dial(document.getElementById('contactPhone'));">חייג</button>
+		       </div>
+		       <div id="contactPhone" class="col-xs-4 text-right contactMan">[[contactPhone]]</div>
+		         <div class="col-xs-2 text-right contactMan">:משרד</div> 
+		     </div>
+	         <div class="row">
+	           <div class="col-xs-offset-1 col-xs-4 contactMan">
+		         <button class="font-smaller blackOnOrange" style="width:100%;background-color:orange;" onclick="Dial(document.getElementById('contactMobile'));">חייג</button>
+		       </div>
+		       <div id="contactMobile" class="col-xs-4 text-right contactMan">[[contactMobile]]</div>
+		       <div class="col-xs-2 text-right contactMan">:נייד</div>
+		     </div>
+	       </section>
+           <input type="hidden" id="hdnInvStatus" value="[[invStatus]]" />
+		</div>
+		<div id="finishMsg" style="display:none;">
+		  <div class="row">
+	        <div class="col-xs-8 text-right" style="font-size: xx-large;margin-top:30px;">
+		    מבצע 
+			</div> 
+		  </div>  
+		  <div class="row">
+	        <div class="col-xs-8 text-right" style="font-size: xx-large;margin-top:30px;">
+		    סיום 
+			</div> 
+		  </div>  
+		  <div class="row">
+	        <div class="col-xs-8 text-right"  style="font-size: xx-large;margin-top:30px;">
+		    הזמנה 
+			</div> 
+          </div>		  
+		  <div class="row">
+	        <div class="col-xs-8 text-center"  style="fmargin-top:30px;">
+		    <img src='img/relax.gif' width=100 height=100>
+			</div> 
+			
+			
+		  </div>  
+		
+		</div>
+	  </div>	
+		<script type="text/javascript" src="../cordova.js"></script>
+        <script type="text/javascript" src="../js/index.js"></script>
+	
+	</body>
+</html>

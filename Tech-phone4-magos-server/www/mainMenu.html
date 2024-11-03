@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <!--
+        Customize this policy to fit your own app's needs. For more guidance, see:
+            https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+        Some notes:
+            * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+            * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+            * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+                * Enable inline JS: add 'unsafe-inline' to default-src
+        -->
+        <meta charset="utf-8" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>טכנאיפון</title>
+		<script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript" src="js/index.js"></script>
+		<script src="jquery.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="globalfuncs.js"></script>
+	
+		<script type="text/javascript">
+		
+		function body_onload(){
+
+		  if(typeof(window.localStorage)!="undefined" && window.localStorage.getItem("UserName")!=null){
+            userCode = window.localStorage.getItem("UserName");
+		    qryStr = "op=getCallsCount&userCode=" + userCode;
+			window.localStorage.removeItem(qryStr);
+		  }
+		  ShowRelaxUser('relaxUserDlg');
+		  setTimeout(function(){
+		    UpdateHeader();
+		  },200);
+		  document.getElementById("divFiller").style.height =  (window.innerHeight - document.getElementById("tblFooterBtns").clientHeight-GetPosition(document.getElementById("divFiller")).y-20) + "px"; // "500px"; //(screen.availHeight - document.getElementById("tblFooterBtns").clientHeight-5) + "px";	
+		
+		  window.localStorage.removeItem("callHistory");
+		  document.getElementById("spnVersion").innerHTML = "(" + GetVersion() + " גירסא)";
+		}	
+		////////////////////////////////////////////////////
+		function showDialog(){
+		  document.querySelector('#dialog').style.display="block";
+		}
+		////////////////////////////////////////////////////
+		function hideDialog(){
+		  document.querySelector('#dialog').style.display="none";
+		}
+		////////////////////////////////////////////////////
+		function clearLocalStorage(){
+		  var driver = window.localStorage.getItem("UserName");
+		  var pass = window.localStorage.getItem("Pass");
+		  for(var key in localStorage) {
+            localStorage.removeItem(key);
+          }
+		  window.localStorage.setItem("UserName",driver);
+		  window.localStorage.setItem("Pass",pass);
+		  document.querySelector('#dialog').style.display="none";
+		}
+		</script>
+	</head>
+    <body onload="body_onload();">
+        		
+		<DIV  style="position:absolute;top:0%;width:100%;text-align:center;align:center;">
+		<TABLE dir="rtl" style="margin: 0 auto">
+		<TR><TD colspan=2><SPAN class="xxLargeRed" >&quot;טכנאיפון&quot;</SPAN>&nbsp;<span class="xLargeBlack">מערכת ניהול טכנאי</span></TD></TR> 
+		<TR><TD colspan=2><script language="javascript">CreateHeader();</script></TD></TR>
+		<TR><TD colspan=2 class="largeBlack">תפריט ראשי</TD></TR>
+		<TR>
+		  <TD align="left"><BUTTON onclick="showDialog();" class="redYellowButton">התחלת דיווחים</BUTTON></TD>
+		  <TD align="left"><BUTTON onclick="window.location='index.html';" class="redYellowButton">יציאה</BUTTON></TD>
+		</TR>
+		<TR><TD colspan=2><IMG src="img/spacer.gif" height=30></TD></TR>  
+		<TR><TD><BUTTON onclick="window.location='callList.html?mainMenuReferer=1&online=' + document.getElementById('tdOnline').innerText;" class="mainMenuBut">קריאות שירות</BUTTON></TD><TD><BUTTON class="mainMenuBut" onclick="window.location='servicesMenu.html';">שירותים</BUTTON></TD></TR>
+		<TR><TD colspan=2><IMG src="img/spacer.gif" height=20></TD></ TR>  
+		<TR><TD><BUTTON  class="mainMenuBut" onclick="alert('שימוש עתידי');">הודעות</BUTTON></TD><TD><BUTTON  class="mainMenuBut" onclick="">&nbsp;</BUTTON></TD></TR>
+		</TABLE>
+		<DIV id="divFiller" >&nbsp;</DIV>
+		<TABLE id="tblFooterBtns" style="margin: 0 auto">
+		<TR><TD><SPAN id="spnVersion" class="largeBlack">&nbsp;&nbsp;&nbsp;</SPAN></TD></TR>
+		</TABLE>
+		</DIV>
+        <DIV id="dialog" style="position:absolute;left:10vw;top:30vh;background-color:white;padding:5px;border:1px solid black;display:none;width:80vw;">
+          <TABLE cellpadding=10>
+		    <TR><TD colspan=3 align="right" dir="rtl" class="largeBlack">כל הנתונים שעדיין לא נשלחו – ימחקו.</TD></TR>
+		    <TR><TD colspan=3 align="right" dir="rtl" class="largeBlack">בצע "שלח" לכל הקריאות שעדיין לא נשלחו.</TD></TR>
+		    <TR>
+			  <TD><BUTTON class="redYellowButton" style="width:60px;" onclick="hideDialog();">לא</BUTTON></TD>
+			  <TD><BUTTON class="redYellowButton" style="width:60px;" onclick="clearLocalStorage();">כן</BUTTON></TD>
+			  <TD align="right" dir="rtl" class="largeBlack">לבצע:</TD> 
+			</TR> 
+		  </TABLE>
+		</DIV> 		
+       	<script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+    </body>
+</html>

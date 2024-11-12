@@ -54,6 +54,10 @@
   color: #FF4000;; 
 }
 
+.largeBlack{
+  font-size:large;
+}
+
 #tdSync{
  background-color:lightgray;
 }

@@ -312,15 +312,15 @@
 	
 	function delImage(){
 	
-	var smallImage = document.getElementById('smallImage');
-	var delImgTxt = document.getElementById('delImgTxt');   
-	var btnDelImg = document.getElementById('btnDelImage'); 
-	if (confirm('אתה בטוח?')) {
-	  localStorage.setItem("img_" + g_CallCode + "_" + g_UnitCode + "_" + g_ImgInd, "DELETED");
-	  smallImage.style.opacity = "0.2";
-	  delImgTxt.style.display = "block";
-	  btnDelImg.style.visibility = "hidden";
-	}		
+	  var smallImage = document.getElementById('smallImage');
+	  var delImgTxt = document.getElementById('delImgTxt');   
+	  var btnDelImg = document.getElementById('btnDelImage'); 
+	  if (confirm('אתה בטוח?')) {
+	    localStorage.setItem("img_" + g_CallCode + "_" + g_UnitCode + "_" + g_ImgInd, "DELETED");
+	    smallImage.style.opacity = "0.2";
+	    delImgTxt.style.display = "block";
+	    btnDelImg.style.visibility = "hidden";
+	  }		
 		
 	  /*
 	  if (confirm('אתה בטוח?')) {
@@ -329,7 +329,6 @@
 		ShowImageByIndex(0);
 	  }
 	  */
-	
 	}
 	
 	function SaveImageDemo(){

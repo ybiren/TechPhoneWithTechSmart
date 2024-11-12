@@ -11,7 +11,7 @@ var g_qryStr ="";
 		
 /********************************************************************/
 function GetVersion(){
-  return "01.15";
+  return "04.09";
 }  
 
 /********************************************************************/
@@ -803,9 +803,13 @@ function SyncImageToServer(invNum,fileName,isEndMission,navigateTo){
                   		  imgDat = reader.result;
 						  pg = fileName.split("_")[2];
 						  qry = "op=uploadImage&invNum=" + invNum + "&pg=" + pg + "&syncToServer=1&imgData=" + encodeURIComponent(imgDat);
-						  UpdData(qry,false);
-						  RemoveLocalFile(fileEntry);
-						  localStorage.removeItem(fileName.replace(".txt",""));
+						  
+              let ky = fileName.replace(".txt","");
+              if(localStorage[ky] !== "DELETED") {
+                UpdData(qry,false);
+              }
+              RemoveLocalFile(fileEntry);
+						  localStorage.removeItem(ky);
 						  //for(var key in localStorage){
 							//if(key.indexOf("img_" + invNum)!=-1){  
 								//SyncImageToServer(invNum,key + ".txt",isEndMission,navigateTo);

@@ -104,8 +104,7 @@
 		
 		/********************************************************************/
 	  	function FinishInv(){
-		
-		  
+				  
 		  var quantity = document.querySelector("#txtQuantity").value;
           var numExecRep = document.querySelector("#txtNumExecRep").value;
        	  var weigeCertNum = json[0].weigeCertNum;
@@ -125,7 +124,8 @@
 				alert("דוח הביצוע לא צולם");
 				return;
 			  }
-			  
+		
+			  /**
 			  if(json[0].invType == INV_MUST_HAVE_WEIGE){
 			  
 				 if(weigeCertNum === null || weigeCertNum.trim()=="" || weigeCertNum.trim()=="0"){
@@ -141,6 +141,7 @@
 				   return;
 				 }
 			  }
+		      **/
 			}	
 		  
 		    document.querySelector("#mainScreen").style.display = "none";
@@ -155,6 +156,14 @@
 		    //SyncOfflineQueriesToServer(GetUrlVars()['invNum'],"invs.html",false);		  
 		}
 		
+		function DoFinishInv() {
+			ShowRelaxUser('relaxUserDlg',true);
+	        setTimeout(function(){
+			  UpdateAndExit();
+			  SyncOfflineQueriesToServer(GetUrlVars()['invNum'],null,false,FinishInv);
+			},200);
+		}
+
 		</script>
 	</head>
     <body id="bdy" onload="body_onload();" style="overflow:hidden;">
@@ -204,7 +213,7 @@
 				<div class="col-xs-offset-1 col-xs-2 text-center"><button style="width:50px;" class="btn-default  btnHeader" onclick="UpdateAndExit(1)">יציאה</button></div>
 				<div class="col-xs-3  text-center"><button style="width:80px;" class="btn-default  btnHeader" onclick="NavToCamera('erPic')" >תמונה</button></div>
 				<div class="col-xs-3  text-center"><button style="width:80px;" class="btn-default  btnHeader" onclick = "NavToSign();" >חתימה</button></div>
-				<div id="btnFinishInv" class="col-xs-3  text-center"><button style="width:60px;" class="btn-default  btnHeader" onclick="UpdateAndExit();SyncOfflineQueriesToServer(GetUrlVars()['invNum'],null,false,FinishInv);" >סיום</button></div>
+				<div id="btnFinishInv" class="col-xs-3  text-center"><button style="width:60px;" class="btn-default  btnHeader" onclick="DoFinishInv()" >סיום</button></div>
 			 </DIV>
 			 <Div style="position:relative;top:-10px">
 			 <DIV class="row" > 

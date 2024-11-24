@@ -11,7 +11,7 @@ var g_qryStr ="";
 		
 /********************************************************************/
 function GetVersion(){
-  return "04.09";
+  return "04.10";
 }  
 
 /********************************************************************/
@@ -787,7 +787,7 @@ function DoPostSyncToServerOps(callCode,isEndMission,navigateTo){
 
 
 /********************************************************************/
-function SyncImageToServer(invNum,fileName,isEndMission,navigateTo){
+function SyncImageToServer(invNum,imgInd,fileName,isEndMission,navigateTo){
 
       window.resolveLocalFileSystemURL(cordova.file.dataDirectory, 
       function(directoryEntry) {
@@ -802,7 +802,7 @@ function SyncImageToServer(invNum,fileName,isEndMission,navigateTo){
                         reader.onloadend = function(evt) {
                   		  imgDat = reader.result;
 						  pg = fileName.split("_")[2];
-						  qry = "op=uploadImage&invNum=" + invNum + "&pg=" + pg + "&syncToServer=1&imgData=" + encodeURIComponent(imgDat);
+						  qry = "op=uploadImage&invNum=" + invNum + "&pg=" + pg + "&imgInd=" + imgInd + "&syncToServer=1&imgData=" + encodeURIComponent(imgDat);
 						  
               let ky = fileName.replace(".txt","");
               if(localStorage[ky] !== "DELETED") {
@@ -861,7 +861,8 @@ function DoSyncOfflineQueriesToServer(invNum,navigateTo,isEndMission){
    UpdData(qry,false);
    for(var key in localStorage){
      if(key.indexOf("img_" + invNum)!=-1){  
-       SyncImageToServer(invNum,key + ".txt",isEndMission,navigateTo);
+       let imgInd = key.split("_")[3];
+       SyncImageToServer(invNum,imgInd,key + ".txt",isEndMission,navigateTo);
 	   //return;
      }
    }

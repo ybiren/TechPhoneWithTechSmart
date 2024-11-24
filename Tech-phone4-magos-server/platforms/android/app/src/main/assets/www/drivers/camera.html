@@ -35,9 +35,8 @@
 		
 	/********************************************************************/
 	function Exit(targetWin){
-      
-	  var invNum = GetUrlVars()["invNum"];
-      var qryStr = "op=updInvImgs&invNum=" + invNum +  "&numImages="  + g_NumImages + "&syncToServer=1&uploadImage=1";		  
+      var invNum = GetUrlVars()["invNum"];
+      //var qryStr = "op=updInvImgs&invNum=" + invNum +  "&numImages="  + g_NumImages + "&syncToServer=1&uploadImage=1";		  
 	  window.location =	"execRep.html?invNum=" + invNum;
 	}
 	/********************************************************************/
@@ -56,6 +55,15 @@
 	  } 
 	  return pgTxt;
 	}
+	/********************************************************************/
+	function AssertOneImage() {
+	  var pg = GetUrlVars()["pg"];		
+	  if((pg === "erSnap" || pg === "erSnap") && g_NumImages>0  && !document.querySelector("#chkReplaceImage").checked) {
+        alert("ניתן לצלם או לבחור מהגלריה תמונה אחת בלבד, באפשרותך להחליף את התמונה על ידי סימון תיבת ההחלפה.");
+	    return false;
+	  }
+	  return true;
+	}
 	
 	/********************************************************************/
 	// device APIs are available
@@ -68,14 +76,19 @@
 		var json = GetData("op=invByNum&invNum=" + invNum);
 	    var pg = GetUrlVars()["pg"]; 
 		g_NumImages = json[0]["numImages_" + pg]; 	   
-	   
-		if(g_NumImages > 0){	
+	    if(g_NumImages > 0){	
 		  g_ImgInd = -1;
 		  ShowImg(1);
 		  RegisterToTouchEvent(smallImage,ShowImg,1,ShowImg,-1);
+		} else {
+			document.querySelector("#rowImageReplacement").style.display = "none";
 		}
-	  
+	    if(pg === "erSnap" || pg==="wgSnap") {
+		  document.querySelector("#btnBack").style.visibility = "hidden";		
+		  document.querySelector("#btnFwd").style.visibility = "hidden";
+		}
 	  },200) 
+		
 	}
 
     // Called when a photo is successfully retrieved
@@ -114,13 +127,29 @@
 		  if(g_imageData.length>0){
 		    var invNum = GetUrlVars()["invNum"];
 			var pg = GetUrlVars()["pg"];
-			fileName = "img_" + invNum + "_" + pg + "_" + g_NumImages;
+			const currImgInd = document.querySelector("#chkReplaceImage").checked ? g_ImgInd : g_NumImages;  
+			fileName = "img_" + invNum + "_" + pg + "_" + currImgInd;
 			SaveCameraImageToFile(fileName + ".txt",g_imageData);
 			localStorage.setItem(fileName,"1");
-			g_NumImages++;
-		    var qryStr = "op=updInvImage&invNum=" + invNum +  "&numImages_" + pg + "=" + g_NumImages;		  
+			
+			if(!document.querySelector("#chkReplaceImage").checked) {
+			  g_NumImages++;
+			}
+			var qryStr = "op=updInvImage&invNum=" + invNum +  "&numImages_" + pg + "=" + g_NumImages;		  
 			UpdData(qryStr , false, null);
-		  } 
+            
+			document.querySelector("#rowImageReplacement").style.display = "block";
+		    
+			setTimeout(() => {
+			  if(!document.querySelector("#chkReplaceImage").checked) {
+			    ShowImg(1);		  
+			  }     
+			},200);
+			
+			
+			//document.querySelector("#chkReplaceImage").checked = false; 
+		  
+		   } 
 		 }
 		 catch(err){
 		   alert(err);
@@ -157,6 +186,10 @@
     //
     function capturePhoto() {
       
+	  if(!AssertOneImage()) {
+        return;		
+	  }
+		
 	  if (typeof(navigator.camera)=="undefined"){
 		  alert("מצלמה לא זוהתה");
 		}
@@ -181,7 +214,11 @@
     // A button will call this function
     //
     function getPhoto() {
-      	  
+      
+	  if(!AssertOneImage()) {
+        return;		
+	  }	
+
 	  if (typeof(navigator.camera)=="undefined"){
 	    alert("מצלמה לא זוהתה");
 	  }
@@ -275,7 +312,7 @@
 		//smallImage.src = localStorage.getItem(g_CallCode + "_" + g_ImgInd);
 	  }
 	  else{
-		  smallImage.src = GetServerIp() + "/Images_Pinuyeem/" + invNum + "_" + pg + "_" + g_ImgInd + ".jpg";
+		  smallImage.src = GetServerIp() + "/Images_Pinuyeem/" + invNum + "_" + pg + "_" + g_ImgInd + ".jpg?rnd=" + Math.random() * 100000;
       }   	
 	  if(g_NumImages > 0) {
 	    document.getElementById("imgInd").innerHTML = `${g_ImgInd + 1}/${g_NumImages}`;
@@ -286,10 +323,8 @@
 	  var smallImage = document.getElementById('smallImage');
 	  var delImgTxt = document.getElementById('delImgTxt');   
 	  var btnDelImg = document.getElementById('btnDelImage'); 
-	  
 	  var invNum = GetUrlVars()["invNum"];
 	  var pg = GetUrlVars()["pg"];
-	
 	  if (confirm('אתה בטוח?')) {
 	    localStorage.setItem("img_" + invNum + "_" + pg + "_" + g_ImgInd, "DELETED");
 	    smallImage.style.opacity = "0.2";
@@ -316,10 +351,14 @@
 	      <div class="col-xs-offset-0 col-xs-4" style="padding-left:20px;"><button id="btnActions" class="btn-default btnHeader" onclick = "capturePhoto();" >צלם תמונה</button></div>
 		  <div class="col-xs-offset-0 col-xs-2" style="padding-left:20px;"><button id="btnDelImage" class="btn-default btnHeader" onclick="delImage();" >מחק</button></div>
 	  </DIV>
+	  <DIV class="row" id="rowImageReplacement">
+		<div class="col-xs-offset-0 col-xs-6 text-right">החלף תמונה&nbsp;</div>
+	    <div class="col-xs-offset-0 col-xs-1"><input type="checkbox" style="width:20px;height:20px;" id="chkReplaceImage"></div>
+	  </DIV> 
 	  <DIV class="row">
-		<div class="col-xs-offset-0 col-xs-2" style="padding-left:20px;"><BUTTON onclick="ShowImg(-1);" class="btn-default btnHeader"><--</BUTTON></div>
+		<div id="btnBack" class="col-xs-offset-0 col-xs-2" style="padding-left:20px;"><BUTTON onclick="ShowImg(-1);" class="btn-default btnHeader"><--</BUTTON></div>
 		<div class="col-xs-offset-3 col-xs-3"><div id="imgInd" class="blackOnGray"></div></div> 
-		<div class="col-xs-offset-2 col-xs-2" style="padding-right:20px;"><BUTTON onclick="ShowImg(1);" class="btn-default btnHeader">--></BUTTON></div>
+		<div id="btnFwd" class="col-xs-offset-2 col-xs-2" style="padding-right:20px;"><BUTTON onclick="ShowImg(1);" class="btn-default btnHeader">--></BUTTON></div>
 	  </DIV> 
 	  <DIV class="row">
 	    <DIV class="col-xs-offset-1 col-xs-11">

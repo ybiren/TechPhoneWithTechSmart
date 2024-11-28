@@ -449,7 +449,7 @@ switch ($op) {
 		 if(isset($_POST['unitCode']))
 	       $unitCode = $_POST['unitCode'];
 		 $code=$_POST['code'];
-		 $partDesc = $_POST['partDesc']; 
+		 $partDesc = str_replace("'","''",$_POST['partDesc']); 
 		 $partUnit = $_POST['partUnit'];
 		 $partQuantity = $_POST['partQuantity'];
 		 
@@ -493,7 +493,7 @@ switch ($op) {
     	break;
     case "insPart":
 	    $code =  $_POST['code']; 
-		$desc =  $_POST['desc']; 
+		$desc =  str_replace("'","''",$_POST['desc']); 
 		$unit =  $_POST['unit']; 
 		$barcode = $_POST['barcode']; 
 		$source =  $_POST['source'];
@@ -510,7 +510,7 @@ switch ($op) {
 		break;
 	case "updPart":
 	    $code =  $_POST['code']; 
-		$desc =  $_POST['desc']; 
+		$desc =  str_replace("'","''",$_POST['desc']); 
 		$unit =  $_POST['unit']; 
 		$barcode = $_POST['barcode']; 
 		$source =  $_POST['source'];
@@ -543,14 +543,14 @@ switch ($op) {
 	case "insCallUnit":
 	  $unitCode = $_POST['unitCode'];
       $callCode = $_POST['callCode'];
-      $unitDesc = $_POST['unitDesc'];
-      $building = $_POST['building'];
-      $floor = $_POST['floor'];
-      $room = $_POST['room'];
-      $manufacturer = $_POST['manufacturer'];
-      $model = $_POST['model'];
-      $outputTon = $_POST['outputTon'];
-      $remarks = $_POST['remarks'];
+      $unitDesc = str_replace("'","''",$_POST['unitDesc']);
+      $building = str_replace("'","''",$_POST['building']);
+      $floor = str_replace("'","''",$_POST['floor']);
+      $room = str_replace("'","''",$_POST['room']);
+      $manufacturer = str_replace("'","''",$_POST['manufacturer']);
+      $model = str_replace("'","''",$_POST['model']);
+      $outputTon = str_replace("'","''",$_POST['outputTon']);
+      $remarks = str_replace("'","''",$_POST['remarks']);
 	  $creationYear = $_POST['creationYear'];
 	  $serialNum = $_POST['serialNum'];
 	  $unitType = $_POST['unitType'];

@@ -34,14 +34,26 @@ function SaveImage($mysqli,$invNum,$pg,$imgInd,$imgData){
   $numImages = $data['numImages']; 
   	
   $file = 'Images_Pinuyeem/'.$invNum.'_'.$pg.'_'.$imgInd.'.jpg';  
-  $isFileExists = file_exists($file);
-  if(!$isFileExists)
-    $file = 'Images_Pinuyeem/'.$invNum.'_'.$pg.'_'.$numImages.'.jpg';  
   
   $success = file_put_contents($file, $data_img);
-  return $success and !$isFileExists;
+  return $success;
 }
 
+/////////////////////////////////////////////////////////////
+function CountNumInvImages($prefix) {
+
+	$folderPath = "Images_Pinuyeem";
+    // Get all files in the folder
+    $files = scandir($folderPath);
+
+    // Filter files that start with the specified prefix
+    $filteredFiles = array_filter($files, function($file) use ($folderPath, $prefix) {
+        return is_file($folderPath . DIRECTORY_SEPARATOR . $file) && strpos($file, $prefix) === 0;
+    });
+
+    // Return the count
+    return count($filteredFiles);
+}
 
 /////////////////////////////////////////////////////////////
 function GetImage($invNum,$pg,$imgInd){
@@ -217,7 +229,8 @@ switch ($op) {
 	  }
 	  $imgData = $_POST['imgData'];
 	  if(!SaveImage($mysqli, $invNum, $pg, $imgInd, $imgData)===false){
-	    $query = "UPDATE `tblInvs` SET numImages_" . $pg . "= numImages_". $pg ."+1 WHERE invNum='$invNum'";
+	    $numImages = CountNumInvImages($invNum. "_". $pg);
+		$query = "UPDATE `tblInvs` SET numImages_" . $pg . "=".  "'$numImages' WHERE invNum='$invNum'";
 		$mysqli->query($query) or die(mysqli_error());
 	  }
 	  break;

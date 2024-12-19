@@ -14,10 +14,11 @@ namespace Tech_Smart
         enum EAppType
         {
          Tech = 1,
-         Pinuyeem = 3
+         Pinuyeem = 3,
+         Pinuyeem2 = 5
         }
 
-        const string VERSION = "4.08";
+        const string VERSION = "4.09";
         const string CALL_TYPE = "1";
         const string PART_TYPE = "2";
         
@@ -355,8 +356,12 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
                         techPhone.Start();
                         break;
                     case (int)EAppType.Pinuyeem:
-                        var pinuyeem = new ClsPinuyeem(currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
+                        var pinuyeem = new ClsPinuyeem("/drivers_post.php", currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
                         pinuyeem.Start();
+                        break;
+                    case (int)EAppType.Pinuyeem2:
+                        var pinuyeem2 = new ClsPinuyeem("/drivers2_post.php", currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
+                        pinuyeem2.Start();
                         break;
                 }
                 // finally , delete Tec-Phone-Get.txt

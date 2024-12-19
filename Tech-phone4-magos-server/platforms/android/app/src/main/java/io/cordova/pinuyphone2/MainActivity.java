@@ -17,7 +17,7 @@
        under the License.
  */
 
-package io.cordova.pinuyphone;
+package io.cordova.pinuyphone2;
 
 import android.os.Bundle;
 import org.apache.cordova.*;

@@ -15,10 +15,12 @@ namespace Tech_Smart
         const string PINUYEEM_PREFIX = "P_";
 
         string currDir; string op; string code; string charsType; string user; string callDateTime; string custName; string siteName; string address; string contactName; string message; string quantity; string unloadingSite; string car; string driver; string invType; string desc;
+        string serverFileName;
 
-        public ClsPinuyeem(string currDir, string op, string code, string charsType, string user, string callDateTime, string custName, string siteName, string address, string contactName, string message, string quantity, string unloadingSite, string car, string driver, string invType,string desc)
+        public ClsPinuyeem(string serverFileName, string currDir, string op, string code, string charsType, string user, string callDateTime, string custName, string siteName, string address, string contactName, string message, string quantity, string unloadingSite, string car, string driver, string invType, string desc)
         {
             this.currDir = currDir; this.op = op; this.code = code; this.charsType = charsType; this.user = user; this.callDateTime = callDateTime; this.custName = custName; this.siteName = siteName; this.address = address; this.contactName = contactName; this.message = message; this.quantity = quantity; this.unloadingSite = unloadingSite; this.car = car; this.driver = driver; this.invType = invType; this.desc = desc;
+            this.serverFileName = serverFileName;
         }
 
         public void Start()
@@ -35,7 +37,7 @@ namespace Tech_Smart
             {
                 var qryStr = String.Format("op={0}&invNum={1}&userCode={2}&dt={3}&custName={4}&siteName={5}&address={6}&contactName={7}&contactPhone={8}&contactMobile={9}&message={10}&quantity={11}&dischargeArea={12}&carNum={13}&driverName={14}&invType={15}&invDesc={16}", "insInvitation", code, user, callDateTime, custName, siteName, address, contactArr[0], contactArr[1], contactArr[2], message, quantity, unloadingSite, car, driver, invType, desc);
                 qryStr = qryStr.Replace("'", "''");
-                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + "/drivers_post.php", qryStr);
+                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + serverFileName, qryStr);
 
                 System.IO.File.WriteAllText("XXX.txt", strResult);
             }
@@ -43,7 +45,7 @@ namespace Tech_Smart
             if (op == "delCall")
             {
                 var qryStr = String.Format("op={0}&invNum={1}", "delInv", code);
-                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + "/drivers_post.php", qryStr);
+                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + serverFileName, qryStr);
             }
             
             if (op == "getCallRep")
@@ -52,7 +54,7 @@ namespace Tech_Smart
 
 
                 var qryStr = String.Format("op={0}&invNum={1}", "invByNum", code);
-                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + "/drivers_post.php", qryStr);
+                var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + serverFileName, qryStr);
                 strResult = strResult.Replace(",false", String.Empty);
                 List<ClsInv> invRep = JsonConvert.DeserializeObject<List<ClsInv>>(strResult);
                 Encoding enc = Encoding.GetEncoding(1255, new EncoderReplacementFallback(" "), new DecoderReplacementFallback(" "));

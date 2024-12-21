@@ -96,10 +96,15 @@
 							 window.location="mainMenu.html";								 
 						   }
 						   if(msg[0].perm==2){
-							 window.sessionStorage.setItem("qryPage","/drivers2_post.php");
+							 window.sessionStorage.setItem("qryPage","/drivers_post.php");
 							 window.location="drivers/driversMenu.html";
 						   }
-						 }
+						   if(msg[0].perm > 2){
+							 window.sessionStorage.setItem("qryPage",`/drivers${msg[0].perm-1}_post.php`);
+							 window.location="drivers/driversMenu.html";
+						   }
+						 
+						}
 						 else 	
 						   alert( "התקן בבקשה גירסא עדכנית" + "\r\n" + json[0].version);
 					  }

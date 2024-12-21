@@ -14,8 +14,7 @@ namespace Tech_Smart
         enum EAppType
         {
          Tech = 1,
-         Pinuyeem = 3,
-         Pinuyeem2 = 5
+         Pinuyeem = 3
         }
 
         const string VERSION = "4.09";
@@ -303,14 +302,22 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
         }
 
         /************************************************************************/
-        private static bool IsUserExist(){
+        private static bool IsUserExist(ref int perm){
             
-
             string qryStr = ("op=login&userName=" + user + "&pass=" + pass);
             qryStr = qryStr.Replace("'", "''");
             Console.Write(qryStr);
             var strResult = WebReq.DoRequest(GlobalFuncs.GetServerIP() + "/tech_post.php", qryStr);
-            return strResult.Contains("perm");
+            if (strResult.Contains("perm"))
+            {
+                var res = JsonConvert.DeserializeObject<List<Permission>>(strResult);
+                perm = res[0].perm;
+                return true;
+            }
+            else
+            {
+                return false;
+            }   
         }		
         
         
@@ -319,6 +326,12 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
         {
             try
             {
+                if (args.Length>0 && args[0].ToUpper() == "-V")
+                {
+                    Console.Write(VERSION);
+                    return;
+                }
+                
                 if (args.Length > 0 && Directory.Exists(args[0]))
                     currDir = args[0];
                 else
@@ -344,7 +357,8 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
                 }
                 sr.Close();
 
-                if (!IsUserExist())
+                int perm = -1;
+                if (!IsUserExist(ref perm))
                 {
                     throw new Exception("user does not exists");
                 }
@@ -356,13 +370,16 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
                         techPhone.Start();
                         break;
                     case (int)EAppType.Pinuyeem:
-                        var pinuyeem = new ClsPinuyeem("/drivers_post.php", currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
+                        string serverFileName = "/drivers_post.php";
+                        if (perm > 2)
+                        {
+                            serverFileName = "/drivers" + (perm - 1).ToString() + "_post.php";  //perm=3 db = dbdrivers2 , perm=4 db = dbdrivers3  and so on...   
+                        }
+
+                        var pinuyeem = new ClsPinuyeem(serverFileName, currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
                         pinuyeem.Start();
                         break;
-                    case (int)EAppType.Pinuyeem2:
-                        var pinuyeem2 = new ClsPinuyeem("/drivers2_post.php", currDir, op, code, charsType, user, callDateTime, custName, siteName, address, contactName, message, quantity, unloadingSite, car, driver, callType, callDesc);
-                        pinuyeem2.Start();
-                        break;
+                 
                 }
                 // finally , delete Tec-Phone-Get.txt
                 File.Delete(Path.Combine(currDir, "Tec-Phone-Get.txt"));
@@ -376,5 +393,10 @@ Description ~ לפי דוח ביצוע 301424, החלפת 4 גמישים ב- 0 �
             }
         }
         
+    }
+
+    public class Permission
+    {
+        public int perm { get; set; }
     }
 }

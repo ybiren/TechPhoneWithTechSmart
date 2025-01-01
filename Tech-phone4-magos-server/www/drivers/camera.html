@@ -281,7 +281,16 @@
       );
 	}
 	
-
+    //Images_Pinuyeem depends on perm , can be Images_Pinuyeem, Images_Pinuyeem2 , Images_Pinuyeem3.... 
+	function imgFolder() {
+	  const perm = window.sessionStorage.getItem("perm");
+	  if(perm && parseInt(perm)>2) {
+		return `Images_Pinuyeem${parseInt(perm)-1}`;
+	  }
+	  else {
+		return `Images_Pinuyeem`;
+	  }
+	}
 	
 	
 	function ShowImg(step){
@@ -312,7 +321,8 @@
 		//smallImage.src = localStorage.getItem(g_CallCode + "_" + g_ImgInd);
 	  }
 	  else{
-		  smallImage.src = GetServerIp() + "/Images_Pinuyeem/" + invNum + "_" + pg + "_" + g_ImgInd + ".jpg?rnd=" + Math.random() * 100000;
+		 //Images_Pinuyeem 
+		 smallImage.src = GetServerIp() + `/${imgFolder()}/` + invNum + "_" + pg + "_" + g_ImgInd + ".jpg?rnd=" + Math.random() * 100000;
       }   	
 	  if(g_NumImages > 0) {
 	    document.getElementById("imgInd").innerHTML = `${g_ImgInd + 1}/${g_NumImages}`;

@@ -92,6 +92,7 @@
 						 window.sessionStorage.setItem("qryPage","/tech_post.php");
 						 var json = GetData("op=getVersion");
 						 if(parseFloat(json[0].version) <= parseFloat(GetVersion())){
+						   window.sessionStorage.setItem("perm", msg[0].perm);
 						   if(msg[0].perm==1){
 							 window.location="mainMenu.html";								 
 						   }
